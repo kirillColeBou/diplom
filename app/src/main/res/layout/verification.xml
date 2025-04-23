@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:background="@drawable/background_button_back"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="60dp"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/back"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Проверьте почту"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="32sp"
+            android:layout_marginTop="10dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="На вашу почту был выслан код подверждения.\nПроверьте её и введите полученный код"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="16sp"
+            android:layout_marginTop="10dp"
+            android:textColor="#707B81"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="30dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Код подтверждения:"
+                    android:textSize="16sp"
+                    android:textColor="#2B2B2B"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal"
+                    android:weightSum="6">
+
+                    <EditText
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/background_edittext_verification"
+                        android:textSize="18sp"
+                        android:textColor="#2B2B2B"
+                        android:inputType="number"/>
+
+                    <EditText
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:background="@drawable/background_edittext_verification"
+                        android:textSize="18sp"
+                        android:textColor="#2B2B2B"
+                        android:inputType="number"
+                        android:enabled="false"/>
+
+                    <EditText
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:background="@drawable/background_edittext_verification"
+                        android:textSize="18sp"
+                        android:textColor="#2B2B2B"
+                        android:inputType="number"
+                        android:enabled="false"/>
+
+                    <EditText
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:background="@drawable/background_edittext_verification"
+                        android:textSize="18sp"
+                        android:textColor="#2B2B2B"
+                        android:inputType="number"
+                        android:enabled="false"/>
+
+                    <EditText
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:background="@drawable/background_edittext_verification"
+                        android:textSize="18sp"
+                        android:textColor="#2B2B2B"
+                        android:inputType="number"
+                        android:enabled="false"/>
+
+                    <EditText
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:background="@drawable/background_edittext_verification"
+                        android:textSize="18sp"
+                        android:textColor="#2B2B2B"
+                        android:inputType="number"
+                        android:enabled="false"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:text="Отправить заново"
+                        android:textColor="#707B81"
+                        android:layout_weight="1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:text="00:00"
+                        android:textStyle="italic"
+                        android:textColor="#707B81"/>
+
+                </LinearLayout>
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="25dp"
+                    android:text="Отправить"
+                    android:textColor="#F7F7F9"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:background="@drawable/background_buttom_authorization"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

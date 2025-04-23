@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AuthorizationActivity"
+    android:background="#FFFFFF">
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Привет!"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="32sp"
+            android:layout_marginTop="100dp"/>
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Заполните свои данные для авторизации \nили зарегистрируйтесь сейчас"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="16sp"
+            android:layout_marginTop="10dp"
+            android:textColor="#707B81"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="30dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Введите свой логин, телефон или email:"
+                    android:textSize="16sp"
+                    android:textColor="#2B2B2B"/>
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:layout_marginTop="15dp"
+                    android:background="@drawable/background_edittext"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:textColor="#2B2B2B"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="25dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Введите свой пароль:"
+                    android:textSize="16sp"
+                    android:textColor="#2B2B2B"/>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:textSize="16sp"
+                        android:layout_marginTop="15dp"
+                        android:background="@drawable/background_edittext"
+                        android:paddingTop="12dp"
+                        android:paddingBottom="12dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="35dp"
+                        android:textColor="#2B2B2B"/>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/eye"
+                        android:layout_gravity="right|bottom"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginRight="10dp"/>
+
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Восстановить"
+                    android:textColor="#707B81"
+                    android:layout_marginTop="15dp"
+                    android:layout_gravity="right"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:text="Войти"
+                android:textColor="#F7F7F9"
+                android:textAllCaps="false"
+                android:textSize="14sp"
+                android:background="@drawable/background_buttom_authorization"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:layout_marginTop="70dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Впервые заглянули?"
+                android:textColor="#6A6A6A"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Создать аккаунт"
+                android:textColor="#2B2B2B"
+                android:textSize="16sp"
+                android:layout_marginLeft="10dp"/>
+
+        </LinearLayout>
+        
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
