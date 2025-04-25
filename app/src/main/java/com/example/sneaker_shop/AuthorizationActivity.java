@@ -59,6 +59,7 @@ public class AuthorizationActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (userExists) {
                         startActivity(new Intent(AuthorizationActivity.this, MainActivity.class));
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                         finish();
                     } else {
                         Toast.makeText(AuthorizationActivity.this,

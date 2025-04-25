@@ -2,7 +2,9 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#FFFFFF"
+    tools:context=".VerificationActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,7 +17,8 @@
             android:background="@drawable/background_button_back"
             android:layout_marginLeft="20dp"
             android:layout_marginTop="60dp"
-            android:gravity="center">
+            android:gravity="center"
+            android:onClick="onBack">
 
             <ImageView
                 android:layout_width="24dp"
@@ -71,15 +74,21 @@
                     android:weightSum="6">
 
                     <EditText
+                        android:id="@+id/code_1"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:background="@drawable/background_edittext_verification"
+                        android:background="@drawable/background_edittext_verification_select"
                         android:textSize="18sp"
                         android:textColor="#2B2B2B"
-                        android:inputType="number"/>
+                        android:inputType="number"
+                        android:maxLength="1"
+                        android:gravity="center"
+                        android:cursorVisible="false"
+                        android:enabled="true"/>
 
                     <EditText
+                        android:id="@+id/code_2"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
@@ -88,9 +97,13 @@
                         android:textSize="18sp"
                         android:textColor="#2B2B2B"
                         android:inputType="number"
+                        android:maxLength="1"
+                        android:gravity="center"
+                        android:cursorVisible="false"
                         android:enabled="false"/>
 
                     <EditText
+                        android:id="@+id/code_3"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
@@ -99,9 +112,13 @@
                         android:textSize="18sp"
                         android:textColor="#2B2B2B"
                         android:inputType="number"
+                        android:maxLength="1"
+                        android:gravity="center"
+                        android:cursorVisible="false"
                         android:enabled="false"/>
 
                     <EditText
+                        android:id="@+id/code_4"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
@@ -110,9 +127,13 @@
                         android:textSize="18sp"
                         android:textColor="#2B2B2B"
                         android:inputType="number"
+                        android:maxLength="1"
+                        android:gravity="center"
+                        android:cursorVisible="false"
                         android:enabled="false"/>
 
                     <EditText
+                        android:id="@+id/code_5"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
@@ -121,9 +142,13 @@
                         android:textSize="18sp"
                         android:textColor="#2B2B2B"
                         android:inputType="number"
+                        android:maxLength="1"
+                        android:gravity="center"
+                        android:cursorVisible="false"
                         android:enabled="false"/>
 
                     <EditText
+                        android:id="@+id/code_6"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
@@ -132,11 +157,45 @@
                         android:textSize="18sp"
                         android:textColor="#2B2B2B"
                         android:inputType="number"
+                        android:maxLength="1"
+                        android:gravity="center"
+                        android:cursorVisible="false"
                         android:enabled="false"/>
 
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/ll_timer"
+                    android:visibility="visible"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="20dp">
+
+                    <TextView
+                        android:id="@+id/resend_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:text="Отправить заново"
+                        android:textColor="#707B81"
+                        android:layout_weight="1"
+                        android:enabled="false"/>
+
+                    <TextView
+                        android:id="@+id/timer_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:text="02:00"
+                        android:textStyle="italic"
+                        android:textColor="#707B81"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ll_newcode"
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -146,30 +205,21 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="12sp"
-                        android:text="Отправить заново"
+                        android:text="Не приходит код?"
                         android:textColor="#707B81"
-                        android:layout_weight="1"/>
+                        android:layout_weight="1"
+                        android:enabled="false"/>
 
                     <TextView
+                        android:id="@+id/submit_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="12sp"
-                        android:text="00:00"
+                        android:text="Отправить заново"
                         android:textStyle="italic"
-                        android:textColor="#707B81"/>
+                        android:textColor="#2B2B2B"/>
 
                 </LinearLayout>
-
-                <androidx.appcompat.widget.AppCompatButton
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="25dp"
-                    android:text="Отправить"
-                    android:textColor="#F7F7F9"
-                    android:textAllCaps="false"
-                    android:textSize="14sp"
-                    android:background="@drawable/background_buttom_authorization"
-                    android:visibility="gone"/>
 
             </LinearLayout>
 

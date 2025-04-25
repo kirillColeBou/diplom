@@ -25,6 +25,8 @@
         <activity android:name=".MainActivity"/>
         <activity android:name=".RegisterActivity"/>
         <activity android:name=".RestorePasswordActivity"/>
+        <activity android:name=".OnBoardActivity"/>
+        <activity android:name=".VerificationActivity"/>
     </application>
 
 </manifest>
