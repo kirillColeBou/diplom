@@ -53,6 +53,7 @@
                     android:textColor="#2B2B2B"/>
 
                 <EditText
+                    android:id="@+id/logins"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="16sp"
@@ -84,6 +85,7 @@
                     android:layout_height="wrap_content">
 
                     <EditText
+                        android:id="@+id/password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textPassword"
@@ -97,12 +99,15 @@
                         android:textColor="#2B2B2B"/>
 
                     <ImageView
+                        android:id="@+id/eyeIcon"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/eye"
                         android:layout_gravity="right|bottom"
                         android:layout_marginBottom="10dp"
-                        android:layout_marginRight="10dp"/>
+                        android:layout_marginRight="10dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
 
                 </FrameLayout>
 
@@ -113,11 +118,13 @@
                     android:textColor="#707B81"
                     android:layout_marginTop="15dp"
                     android:layout_gravity="right"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp"
+                    android:onClick="onRestorePassword"/>
 
             </LinearLayout>
 
             <androidx.appcompat.widget.AppCompatButton
+                android:onClick="onAuthorization"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="25dp"
@@ -149,7 +156,8 @@
                 android:text="Создать аккаунт"
                 android:textColor="#2B2B2B"
                 android:textSize="16sp"
-                android:layout_marginLeft="10dp"/>
+                android:layout_marginLeft="10dp"
+                android:onClick="onRegister"/>
 
         </LinearLayout>
         

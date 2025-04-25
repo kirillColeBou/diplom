@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_onboard">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="70dp"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Добро пожаловать"
+                android:textSize="30sp"
+                android:gravity="center"
+                android:textColor="#FFFFFF"
+                android:layout_gravity="center"/>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/onboard_1"
+                android:layout_marginTop="130dp"
+                android:paddingLeft="35dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="30dp">
+
+                <LinearLayout
+                    android:layout_width="45dp"
+                    android:layout_height="3dp"
+                    android:background="@drawable/slider_select"
+                    android:layout_marginRight="15dp"/>
+
+                <LinearLayout
+                    android:layout_width="30dp"
+                    android:layout_height="3dp"
+                    android:background="@drawable/slider_inactive"/>
+
+                <LinearLayout
+                    android:layout_width="30dp"
+                    android:layout_height="3dp"
+                    android:background="@drawable/slider_inactive"
+                    android:layout_marginLeft="15dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="35dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:textAllCaps="false"
+            android:text="Начать"
+            android:background="@drawable/background_button_onboard"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="80dp"
+            android:layout_weight="1">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/onboard_2"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Твоя обувь -\nтвоя репутация"
+                    android:textSize="34sp"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginTop="60dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Только здесь. Только для своих.\nУзрейте сейчас!"
+                    android:textSize="16sp"
+                    android:gravity="center"
+                    android:textColor="#D8D8D8"
+                    android:layout_marginTop="15dp"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="40dp">
+
+                    <LinearLayout
+                        android:layout_width="30dp"
+                        android:layout_height="3dp"
+                        android:background="@drawable/slider_inactive"
+                        android:layout_marginRight="15dp"/>
+
+                    <LinearLayout
+                        android:layout_width="45dp"
+                        android:layout_height="3dp"
+                        android:background="@drawable/slider_select"/>
+
+                    <LinearLayout
+                        android:layout_width="30dp"
+                        android:layout_height="3dp"
+                        android:background="@drawable/slider_inactive"
+                        android:layout_marginLeft="15dp"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="35dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:textAllCaps="false"
+            android:text="Войти в комьюнити"
+            android:background="@drawable/background_button_onboard"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="80dp"
+            android:layout_weight="1">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/onboard_3"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ваш стиль -\nВаша сила"
+                    android:textSize="34sp"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginTop="60dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Каждая пара в вашем гардеробе —\nшаг к уверенности"
+                    android:textSize="16sp"
+                    android:gravity="center"
+                    android:textColor="#D8D8D8"
+                    android:layout_marginTop="15dp"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="40dp">
+
+                    <LinearLayout
+                        android:layout_width="30dp"
+                        android:layout_height="3dp"
+                        android:background="@drawable/slider_inactive"
+                        android:layout_marginRight="15dp"/>
+
+                    <LinearLayout
+                        android:layout_width="30dp"
+                        android:layout_height="3dp"
+                        android:background="@drawable/slider_inactive"/>
+
+                    <LinearLayout
+                        android:layout_width="45dp"
+                        android:layout_height="3dp"
+                        android:background="@drawable/slider_select"
+                        android:layout_marginLeft="15dp"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="35dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:textAllCaps="false"
+            android:text="Присоединиться сейчас"
+            android:background="@drawable/background_button_onboard"/>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

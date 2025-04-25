@@ -1,0 +1,71 @@
+package com.example.sneaker_shop;
+
+
+import android.os.AsyncTask;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.net.URLEncoder;
+
+public class UserContext {
+    private static final String URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/users";
+    private static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
+    private static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
+
+    public interface Callback {
+        void onSuccess(boolean userExists);
+        void onError(String error);
+    }
+
+    public static void checkUserCredentials(String loginOrEmailOrPhone, String password, Callback callback) {
+        new CheckUserTask(loginOrEmailOrPhone, password, callback).execute();
+    }
+
+    private static class CheckUserTask extends AsyncTask<Void, Void, Boolean> {
+        private final String loginOrEmailOrPhone;
+        private final String password;
+        private final Callback callback;
+        private String error;
+
+        CheckUserTask(String loginOrEmailOrPhone, String password, Callback callback) {
+            this.loginOrEmailOrPhone = loginOrEmailOrPhone;
+            this.password = password;
+            this.callback = callback;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            try {
+                String url = URL + "?or=" +
+                        URLEncoder.encode("(login.eq." + loginOrEmailOrPhone +
+                                ",email.eq." + loginOrEmailOrPhone +
+                                ",phone_number.eq." + loginOrEmailOrPhone + ")", "UTF-8") +
+                        "&password=eq." + URLEncoder.encode(password, "UTF-8");
+                Document doc = Jsoup.connect(url)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .ignoreContentType(true)
+                        .get();
+                String response = doc.body().text();
+                Log.d("Supabase", "Response: " + response);
+                return new JSONArray(response).length() > 0;
+            } catch (Exception e) {
+                error = "Error: " + e.getMessage();
+                Log.e("Supabase", "Request failed: " + error);
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean userExists) {
+            if (error != null) {
+                callback.onError(error);
+            } else {
+                callback.onSuccess(userExists);
+            }
+        }
+    }
+}
