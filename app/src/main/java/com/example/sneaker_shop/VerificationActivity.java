@@ -30,15 +30,33 @@ public class VerificationActivity extends AppCompatActivity {
     private boolean isTimerRunning = false;
     private boolean isErrorState = false;
     private String email, phone, password;
+    private String mode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.verification_activity);
-
         initializeViews();
-        getRegistrationData();
+        getIntentData();
         setupCodeVerification();
+    }
+
+    private void getIntentData() {
+        Intent intent = getIntent();
+        email = intent.getStringExtra("email");
+        mode = intent.getStringExtra("mode");
+        if (!"password_reset".equals(mode)) {
+            phone = intent.getStringExtra("phone");
+            password = intent.getStringExtra("password");
+        }
+    }
+
+    private void proceedToPasswordReset() {
+        Intent intent = new Intent(this, ForgotPasswordActivity.class);
+        intent.putExtra("email", email);
+        startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        finish();
     }
 
     private void initializeViews() {
@@ -47,20 +65,12 @@ public class VerificationActivity extends AppCompatActivity {
         submitButton = findViewById(R.id.submit_button);
         llTimer = findViewById(R.id.ll_timer);
         llNewCode = findViewById(R.id.ll_newcode);
-
         codeInputs[0] = findViewById(R.id.code_1);
         codeInputs[1] = findViewById(R.id.code_2);
         codeInputs[2] = findViewById(R.id.code_3);
         codeInputs[3] = findViewById(R.id.code_4);
         codeInputs[4] = findViewById(R.id.code_5);
         codeInputs[5] = findViewById(R.id.code_6);
-    }
-
-    private void getRegistrationData() {
-        Intent intent = getIntent();
-        email = intent.getStringExtra("email");
-        phone = intent.getStringExtra("phone");
-        password = intent.getStringExtra("password");
     }
 
     private void setupCodeVerification() {
@@ -87,7 +97,6 @@ public class VerificationActivity extends AppCompatActivity {
     private void setupCodeInputListeners() {
         for (int i = 0; i < codeInputs.length; i++) {
             final int currentIndex = i;
-
             codeInputs[i].addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override public void afterTextChanged(Editable s) {}
@@ -97,7 +106,6 @@ public class VerificationActivity extends AppCompatActivity {
                     handleCodeInputChange(currentIndex, s);
                 }
             });
-
             codeInputs[i].setOnFocusChangeListener((v, hasFocus) -> {
                 EditText et = (EditText)v;
                 if (hasFocus && et.isEnabled()) {
@@ -110,7 +118,6 @@ public class VerificationActivity extends AppCompatActivity {
                 }
             });
         }
-
         resendText.setOnClickListener(v -> handleResendCode());
         submitButton.setOnClickListener(v -> {
             generatedCode = generateRandomCode();
@@ -124,13 +131,11 @@ public class VerificationActivity extends AppCompatActivity {
         if (isErrorState) {
             clearErrorState();
         }
-
         if (s.length() == 1 && currentIndex < codeInputs.length - 1) {
             codeInputs[currentIndex].clearFocus();
             codeInputs[currentIndex + 1].setEnabled(true);
             codeInputs[currentIndex + 1].requestFocus();
         }
-
         if (isAllFieldsFilled()) {
             verifyCode();
         }
@@ -150,9 +155,12 @@ public class VerificationActivity extends AppCompatActivity {
         for (EditText input : codeInputs) {
             enteredCode.append(input.getText().toString());
         }
-
         if (enteredCode.toString().equals(generatedCode)) {
-            registerUser();
+            if ("password_reset".equals(mode)) {
+                proceedToPasswordReset();
+            } else {
+                registerUser();
+            }
         } else {
             showCodeError();
         }
@@ -169,7 +177,6 @@ public class VerificationActivity extends AppCompatActivity {
                             "{\"email\":\"%s\",\"phone_number\":\"%s\",\"password\":\"%s\"}",
                             email, phone, md5(password)
                     );
-
                     Document doc = Jsoup.connect(RegisterContext.URL)
                             .header("Authorization", RegisterContext.TOKEN)
                             .header("apikey", RegisterContext.SECRET)
@@ -178,7 +185,6 @@ public class VerificationActivity extends AppCompatActivity {
                             .requestBody(jsonBody)
                             .ignoreContentType(true)
                             .post();
-
                     return true;
                 } catch (Exception e) {
                     error = e.getMessage();
@@ -213,7 +219,7 @@ public class VerificationActivity extends AppCompatActivity {
 
     private void proceedToOnboarding() {
         startActivity(new Intent(this, OnBoardActivity.class));
-
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         finish();
     }
 
@@ -224,12 +230,10 @@ public class VerificationActivity extends AppCompatActivity {
                 input.setText("");
                 input.setEnabled(false);
             }
-
             codeInputs[0].setBackgroundResource(R.drawable.background_edittext_verification_select);
             for (int i = 1; i < codeInputs.length; i++) {
                 codeInputs[i].setBackgroundResource(R.drawable.background_edittext_verification_error);
             }
-
             codeInputs[0].setEnabled(true);
             codeInputs[0].requestFocus();
         });
@@ -270,13 +274,11 @@ public class VerificationActivity extends AppCompatActivity {
         if (countDownTimer != null) {
             countDownTimer.cancel();
         }
-
         runOnUiThread(() -> {
             llTimer.setVisibility(View.VISIBLE);
             llNewCode.setVisibility(View.GONE);
             resendText.setEnabled(false);
             isTimerRunning = true;
-
             countDownTimer = new CountDownTimer(millisInFuture, 1000) {
                 public void onTick(long millisUntilFinished) {
                     long seconds = millisUntilFinished / 1000;
@@ -308,8 +310,15 @@ public class VerificationActivity extends AppCompatActivity {
     }
 
     public void onBack(View view){
-        startActivity(new Intent(this, RegisterActivity.class));
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-        finish();
+        if("password_reset".equals(mode)){
+            startActivity(new Intent(this, RestorePasswordActivity.class));
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            finish();
+        }
+        else{
+            startActivity(new Intent(this, RegisterActivity.class));
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            finish();
+        }
     }
 }
