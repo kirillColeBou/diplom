@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="24dp"
+    android:gravity="center"
+    android:background="@drawable/background_category_item"
+    android:paddingLeft="8dp"
+    android:paddingRight="8dp"
+    android:layout_marginEnd="8dp">
+
+    <TextView
+        android:id="@+id/text_category"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Категория"
+        android:textStyle="bold"
+        android:textColor="#2B2B2B"
+        android:layout_marginLeft="6dp"
+        android:layout_marginRight="6dp"
+        android:textSize="12sp"/>
+
+</LinearLayout>
