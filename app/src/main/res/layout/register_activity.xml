@@ -77,7 +77,8 @@
                     android:paddingBottom="12dp"
                     android:paddingLeft="10dp"
                     android:paddingRight="10dp"
-                    android:textColor="#2B2B2B"/>
+                    android:textColor="#2B2B2B"
+                    android:maxLines="1"/>
 
             </LinearLayout>
 
@@ -105,7 +106,8 @@
                     android:paddingBottom="12dp"
                     android:paddingLeft="10dp"
                     android:paddingRight="35dp"
-                    android:textColor="#2B2B2B"/>
+                    android:textColor="#2B2B2B"
+                    android:maxLines="1"/>
 
             </LinearLayout>
 
@@ -134,7 +136,8 @@
                     android:paddingBottom="12dp"
                     android:paddingLeft="10dp"
                     android:paddingRight="35dp"
-                    android:textColor="#2B2B2B"/>
+                    android:textColor="#2B2B2B"
+                    android:maxLines="1"/>
 
             </LinearLayout>
 

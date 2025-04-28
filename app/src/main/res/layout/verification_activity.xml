@@ -85,7 +85,8 @@
                         android:maxLength="1"
                         android:gravity="center"
                         android:cursorVisible="false"
-                        android:enabled="true"/>
+                        android:enabled="true"
+                        android:maxLines="1"/>
 
                     <EditText
                         android:id="@+id/code_2"
@@ -100,7 +101,8 @@
                         android:maxLength="1"
                         android:gravity="center"
                         android:cursorVisible="false"
-                        android:enabled="false"/>
+                        android:enabled="false"
+                        android:maxLines="1"/>
 
                     <EditText
                         android:id="@+id/code_3"
@@ -115,7 +117,8 @@
                         android:maxLength="1"
                         android:gravity="center"
                         android:cursorVisible="false"
-                        android:enabled="false"/>
+                        android:enabled="false"
+                        android:maxLines="1"/>
 
                     <EditText
                         android:id="@+id/code_4"
@@ -130,7 +133,8 @@
                         android:maxLength="1"
                         android:gravity="center"
                         android:cursorVisible="false"
-                        android:enabled="false"/>
+                        android:enabled="false"
+                        android:maxLines="1"/>
 
                     <EditText
                         android:id="@+id/code_5"
@@ -145,7 +149,8 @@
                         android:maxLength="1"
                         android:gravity="center"
                         android:cursorVisible="false"
-                        android:enabled="false"/>
+                        android:enabled="false"
+                        android:maxLines="1"/>
 
                     <EditText
                         android:id="@+id/code_6"
@@ -160,7 +165,8 @@
                         android:maxLength="1"
                         android:gravity="center"
                         android:cursorVisible="false"
-                        android:enabled="false"/>
+                        android:enabled="false"
+                        android:maxLines="1"/>
 
                 </LinearLayout>
 

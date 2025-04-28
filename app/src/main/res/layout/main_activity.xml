@@ -49,7 +49,8 @@
                 android:layout_marginTop="15dp"
                 android:layout_marginRight="15dp"
                 android:layout_marginLeft="15dp"
-                android:layout_marginBottom="15dp">
+                android:layout_marginBottom="15dp"
+                android:onClick="onSearch">
 
                 <ImageView
                     android:layout_width="20dp"
@@ -59,15 +60,14 @@
                     android:layout_marginBottom="5dp"
                     android:layout_marginLeft="7.5dp"/>
 
-                <EditText
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:hint="Найти кроссовки"
+                    android:text="Найти кроссовки"
                     android:textSize="12sp"
                     android:background="#FFFFFF"
                     android:layout_gravity="center"
                     android:layout_marginLeft="5dp"
-                    android:textColorHint="#2B2B2B"
                     android:textColor="#2B2B2B"
                     android:layout_weight="1"/>
 
@@ -116,16 +116,23 @@
 
         </LinearLayout>
         <!--Основной контент-->
-        <LinearLayout
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefresh"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
             android:layout_marginTop="15dp"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp">
 
-        </LinearLayout>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_products"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="80dp"/>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
         <!--Подвал-->
         <LinearLayout
             android:layout_width="match_parent"
@@ -136,15 +143,48 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="25dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="15dp"
                 android:layout_marginBottom="40dp"
                 android:layout_marginLeft="15dp"
-                android:layout_marginRight="15dp">
+                android:layout_marginRight="15dp"
+                android:orientation="horizontal"
+                android:weightSum="5">
 
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/home_select"/>
 
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/menu"
+                    android:onClick="onMenu"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/favorite"
+                    android:onClick="onFavorite"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/cart"
+                    android:onClick="onCart"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/person"
+                    android:onClick="onPerson"/>
 
             </LinearLayout>
-
         </LinearLayout>
 
     </LinearLayout>

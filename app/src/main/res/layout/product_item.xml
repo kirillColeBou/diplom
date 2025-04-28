@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="220dp"
+        android:orientation="vertical"
+        android:background="@drawable/background_product_item">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:src="@drawable/favorite_item"
+                android:layout_gravity="right"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="10dp"/>
+            
+            <ImageView
+                android:id="@+id/iamge_product"
+                android:layout_width="160dp"
+                android:layout_height="80dp"
+                android:src="@drawable/nike_air_force"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_gravity="center"/>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!--<LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
+            android:layout_width="160dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"/>
+
+        <LinearLayout
+            android:id="@+id/dotsLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
+            android:paddingTop="8dp"/>
+
+    </LinearLayout>-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="3dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="3dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:id="@+id/name_product"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Здесь будет название \nкроссовок"
+            android:textColor="#1A1A1A"
+            android:textSize="10sp"/>
+
+        <TextView
+            android:id="@+id/price_product"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="8 999 ₽"
+            android:textColor="#B74D5D"
+            android:textStyle="bold|italic"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>
