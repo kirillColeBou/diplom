@@ -195,6 +195,8 @@ public class VerificationActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(Boolean success) {
                 if (success) {
+                    AuthUtils.saveUserCredentials(VerificationActivity.this,
+                            email, md5(password));
                     proceedToOnboarding();
                 } else {
                     showRegistrationError(error);

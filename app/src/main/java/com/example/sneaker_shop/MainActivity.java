@@ -1,5 +1,6 @@
 package com.example.sneaker_shop;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -19,6 +20,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!AuthUtils.isUserLoggedIn(this)) {
+            startActivity(new Intent(this, AuthorizationActivity.class));
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            finish();
+            return;
+        }
         setContentView(R.layout.main_activity);
         categoriesRecyclerView = findViewById(R.id.recycler_view_categories);
         categoriesRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
