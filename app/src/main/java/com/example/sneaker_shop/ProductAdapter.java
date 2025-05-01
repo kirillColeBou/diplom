@@ -20,10 +20,18 @@ import java.util.Locale;
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
     private List<Product> productList;
     private Context context;
+    private String currentUserId;
+    private OnFavoriteClickListener favoriteClickListener;
 
-    public ProductAdapter(Context context, List<Product> productList) {
+    public interface OnFavoriteClickListener {
+        void onFavoriteClick(int position, boolean isFavorite);
+    }
+
+    public ProductAdapter(Context context, List<Product> productList, String currentUserId, OnFavoriteClickListener listener) {
         this.context = context;
         this.productList = productList;
+        this.currentUserId = currentUserId;
+        this.favoriteClickListener = listener;
     }
 
     @NonNull
@@ -38,7 +46,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         Product product = productList.get(position);
         holder.nameProduct.setText(product.getName());
         holder.priceProduct.setText(String.format(Locale.getDefault(), "%.2f ₽", product.getPrice()));
-
         if (product.getImage() != null && !product.getImage().isEmpty()) {
             try {
                 String base64Image = product.getImage().split(",")[1];
@@ -50,6 +57,61 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 holder.imageProduct.setImageResource(R.drawable.nike_air_force);
             }
         }
+        FavoriteContext.checkFavorite(currentUserId, String.valueOf(product.getId()), new FavoriteContext.FavoriteCallback() {
+            @Override
+            public void onSuccess(boolean isFavorite) {
+                int currentPosition = holder.getAdapterPosition();
+                if (currentPosition != RecyclerView.NO_POSITION) {
+                    holder.favoriteIcon.setImageResource(isFavorite ?
+                            R.drawable.favorite_item_select : R.drawable.favorite_item);
+                    holder.favoriteIcon.setTag(isFavorite);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("ProductAdapter", "Error checking favorite status: " + error);
+            }
+        });
+
+        holder.favoriteIcon.setOnClickListener(v -> {
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) return;
+            Boolean isFavorite = (Boolean) holder.favoriteIcon.getTag();
+            if (isFavorite == null) return;
+            boolean newFavoriteState = !isFavorite;
+            holder.favoriteIcon.setImageResource(newFavoriteState ?
+                    R.drawable.favorite_item_select : R.drawable.favorite_item);
+            holder.favoriteIcon.setTag(newFavoriteState);
+            Product currentProduct = productList.get(currentPosition);
+            FavoriteContext.toggleFavorite(currentUserId, String.valueOf(currentProduct.getId()), isFavorite,
+                    new FavoriteContext.FavoriteCallback() {
+                        @Override
+                        public void onSuccess(boolean confirmedNewState) {
+                            int updatedPosition = holder.getAdapterPosition();
+                            if (updatedPosition != RecyclerView.NO_POSITION) {
+                                holder.favoriteIcon.setImageResource(confirmedNewState ?
+                                        R.drawable.favorite_item_select : R.drawable.favorite_item);
+                                holder.favoriteIcon.setTag(confirmedNewState);
+
+                                if (favoriteClickListener != null) {
+                                    favoriteClickListener.onFavoriteClick(updatedPosition, confirmedNewState);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            int updatedPosition = holder.getAdapterPosition();
+                            if (updatedPosition != RecyclerView.NO_POSITION) {
+                                holder.favoriteIcon.setImageResource(isFavorite ?
+                                        R.drawable.favorite_item_select : R.drawable.favorite_item);
+                                holder.favoriteIcon.setTag(isFavorite);
+                                Log.e("ProductAdapter", "Error toggling favorite: " + error);
+                            }
+                        }
+                    });
+        });
     }
 
     @Override
@@ -61,12 +123,14 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         ImageView imageProduct;
         TextView nameProduct;
         TextView priceProduct;
+        ImageView favoriteIcon;
 
         public ProductViewHolder(@NonNull View itemView) {
             super(itemView);
             imageProduct = itemView.findViewById(R.id.iamge_product);
             nameProduct = itemView.findViewById(R.id.name_product);
             priceProduct = itemView.findViewById(R.id.price_product);
+            favoriteIcon = itemView.findViewById(R.id.favorite_icon);
         }
     }
 }

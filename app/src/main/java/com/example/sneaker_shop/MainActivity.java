@@ -6,24 +6,20 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import com.yandex.mobile.ads.banner.BannerAdSize;
 import com.yandex.mobile.ads.banner.BannerAdView;
 import com.yandex.mobile.ads.common.AdRequest;
 import com.yandex.mobile.ads.common.InitializationListener;
 import com.yandex.mobile.ads.common.MobileAds;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ProductAdapter.OnFavoriteClickListener, CategoryAdapter.OnCategoryClickListener {
     private RecyclerView categoriesRecyclerView;
     private CategoryAdapter categoryAdapter;
     private List<Category> categories = new ArrayList<>();
@@ -32,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Product> productList = new ArrayList<>();
     private SwipeRefreshLayout swipeRefresh;
     private BannerAdView adView;
+    private String currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         setContentView(R.layout.main_activity);
+        currentUserId = AuthUtils.getCurrentUserId(this);
         MobileAds.initialize(this, new InitializationListener() {
             @Override
             public void onInitializationCompleted() {
@@ -70,16 +68,53 @@ public class MainActivity extends AppCompatActivity {
 
     private void initCategories() {
         categoriesRecyclerView = findViewById(R.id.recycler_view_categories);
-        categoriesRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        categoryAdapter = new CategoryAdapter(categories, position -> {
-            for (int i = 0; i < categories.size(); i++) {
-                categories.get(i).setSelected(i == position);
-            }
-            categoryAdapter.notifyDataSetChanged();
-            loadProductsForCategory(categories.get(position).getId());
-        });
+        categoriesRecyclerView.setLayoutManager(new LinearLayoutManager(
+                this, LinearLayoutManager.HORIZONTAL, false));
+        categoryAdapter = new CategoryAdapter(categories, this);
         categoriesRecyclerView.setAdapter(categoryAdapter);
         loadCategories();
+    }
+
+    @Override
+    public void onCategoryClick(int position) {
+        for (Category category : categories) {
+            category.setSelected(false);
+        }
+        categories.get(position).setSelected(true);
+        categoryAdapter.notifyDataSetChanged();
+        Category selectedCategory = categories.get(position);
+        if (selectedCategory.getId() == -1) {
+            loadRecommendedProducts();
+        } else if (selectedCategory.getId() == -2) {
+            loadProducts();
+        } else {
+            loadProductsForCategory(selectedCategory.getId());
+        }
+    }
+
+    private void loadRecommendedProducts() {
+        swipeRefresh.setRefreshing(true);
+        ProductContext.loadRecommendedProducts(new ProductContext.ProductsCallback() {
+            @Override
+            public void onSuccess(List<Product> products) {
+                runOnUiThread(() -> {
+                    productList.clear();
+                    productList.addAll(products);
+                    productAdapter.notifyDataSetChanged();
+                    swipeRefresh.setRefreshing(false);
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this,
+                            "Ошибка загрузки рекомендуемых товаров",
+                            Toast.LENGTH_SHORT).show();
+                    swipeRefresh.setRefreshing(false);
+                });
+            }
+        });
     }
 
     private void initProducts() {
@@ -98,9 +133,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
         productsRecyclerView.setClipToPadding(false);
         productsRecyclerView.setPadding(spacingInPixels, 0, spacingInPixels, 0);
-        productAdapter = new ProductAdapter(this, productList);
+        productAdapter = new ProductAdapter(this, productList, currentUserId, this);
         productsRecyclerView.setAdapter(productAdapter);
     }
 
@@ -148,26 +184,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadProductsForCategory(int categoryId) {
+        swipeRefresh.setRefreshing(true);
+        ProductContext.loadProductsByCategory(categoryId, new ProductContext.ProductsCallback() {
+            @Override
+            public void onSuccess(List<Product> products) {
+                runOnUiThread(() -> {
+                    productList.clear();
+                    productList.addAll(products);
+                    productAdapter.notifyDataSetChanged();
+                    swipeRefresh.setRefreshing(false);
+                });
+            }
 
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this,
+                            "Ошибка загрузки товаров категории",
+                            Toast.LENGTH_SHORT).show();
+                    swipeRefresh.setRefreshing(false);
+                });
+            }
+        });
     }
 
-    public void onMenu(View view){
-
+    @Override
+    public void onFavoriteClick(int position, boolean isFavorite) {
+        Product product = productList.get(position);
     }
 
-    public void onFavorite(View view){
-
+    public void onMenu(View view) {
+        // Реализация меню
     }
 
-    public void onCart(View view){
-
+    public void onFavorite(View view) {
+        startActivity(new Intent(this, FavoriteActivity.class));
+        overridePendingTransition(0, 0);
     }
 
-    public void onPerson(View view){
-
+    public void onCart(View view) {
+        // Реализация корзины
     }
 
-    public void onSearch(View view){
+    public void onPerson(View view) {
+        // Реализация профиля
+    }
 
+    public void onSearch(View view) {
+        // Реализация поиска
     }
 }

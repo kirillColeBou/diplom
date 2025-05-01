@@ -3,16 +3,19 @@ package com.example.sneaker_shop;
 public class Category {
     private int id;
     private String name;
-    private boolean isSelected;
+    private boolean selected;
 
-    public Category(int id, String name, boolean isSelected) {
+    public Category(int id, String name, boolean selected) {
         this.id = id;
         this.name = name;
-        this.isSelected = isSelected;
+        this.selected = selected;
     }
 
     public int getId() { return id; }
     public String getName() { return name; }
-    public boolean isSelected() { return isSelected; }
-    public void setSelected(boolean selected) { isSelected = selected; }
+    public boolean isSelected() { return selected; }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
 }

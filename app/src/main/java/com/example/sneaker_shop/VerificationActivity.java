@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONArray;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -167,11 +168,11 @@ public class VerificationActivity extends AppCompatActivity {
     }
 
     private void registerUser() {
-        new AsyncTask<Void, Void, Boolean>() {
+        new AsyncTask<Void, Void, String>() {
             private String error;
 
             @Override
-            protected Boolean doInBackground(Void... voids) {
+            protected String doInBackground(Void... voids) {
                 try {
                     String jsonBody = String.format(
                             "{\"email\":\"%s\",\"phone_number\":\"%s\",\"password\":\"%s\"}",
@@ -185,21 +186,31 @@ public class VerificationActivity extends AppCompatActivity {
                             .requestBody(jsonBody)
                             .ignoreContentType(true)
                             .post();
-                    return true;
+                    String getUserUrl = RegisterContext.URL + "?email=eq." + email + "&select=id";
+                    Document userDoc = Jsoup.connect(getUserUrl)
+                            .header("Authorization", RegisterContext.TOKEN)
+                            .header("apikey", RegisterContext.SECRET)
+                            .ignoreContentType(true)
+                            .get();
+                    JSONArray jsonArray = new JSONArray(userDoc.body().text());
+                    if (jsonArray.length() > 0) {
+                        return jsonArray.getJSONObject(0).getString("id");
+                    }
+                    return null;
                 } catch (Exception e) {
                     error = e.getMessage();
-                    return false;
+                    return null;
                 }
             }
 
             @Override
-            protected void onPostExecute(Boolean success) {
-                if (success) {
+            protected void onPostExecute(String userId) {
+                if (userId != null) {
                     AuthUtils.saveUserCredentials(VerificationActivity.this,
-                            email, md5(password));
+                            email, md5(password), userId);
                     proceedToOnboarding();
                 } else {
-                    showRegistrationError(error);
+                    showRegistrationError(error != null ? error : "Не удалось получить ID пользователя");
                 }
             }
         }.execute();

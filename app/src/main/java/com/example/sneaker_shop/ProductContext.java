@@ -74,4 +74,114 @@ public class ProductContext {
             }
         }
     }
+
+    public static void loadProductsByCategory(int categoryId, ProductsCallback callback) {
+        new LoadProductsByCategoryTask(categoryId, callback).execute();
+    }
+
+    private static class LoadProductsByCategoryTask extends AsyncTask<Void, Void, List<Product>> {
+        private final int categoryId;
+        private final ProductsCallback callback;
+        private String error;
+
+        LoadProductsByCategoryTask(int categoryId, ProductsCallback callback) {
+            this.categoryId = categoryId;
+            this.callback = callback;
+        }
+
+        @Override
+        protected List<Product> doInBackground(Void... voids) {
+            List<Product> products = new ArrayList<>();
+            try {
+                String url = URL + "?category_id=eq." + categoryId;
+                Document doc = Jsoup.connect(url)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .ignoreContentType(true)
+                        .get();
+                String response = doc.body().text();
+                JSONArray jsonArray = new JSONArray(response);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    Product product = new Product(
+                            obj.getInt("id"),
+                            obj.getString("name"),
+                            obj.getDouble("price"),
+                            obj.getString("image"),
+                            obj.getString("description"),
+                            obj.getInt("category_id")
+                    );
+                    products.add(product);
+                }
+                return products;
+            } catch (Exception e) {
+                error = "Error: " + e.getMessage();
+                Log.e("Supabase", "Failed to load products by category: " + error);
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<Product> products) {
+            if (error != null) {
+                callback.onError(error);
+            } else {
+                callback.onSuccess(products);
+            }
+        }
+    }
+
+    public static void loadRecommendedProducts(ProductsCallback callback) {
+        new LoadRecommendedProductsTask(callback).execute();
+    }
+
+    private static class LoadRecommendedProductsTask extends AsyncTask<Void, Void, List<Product>> {
+        private final ProductsCallback callback;
+        private String error;
+
+        LoadRecommendedProductsTask(ProductsCallback callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        protected List<Product> doInBackground(Void... voids) {
+            List<Product> products = new ArrayList<>();
+            try {
+                String url = URL + "?limit=8";
+                Document doc = Jsoup.connect(url)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .ignoreContentType(true)
+                        .get();
+                String response = doc.body().text();
+                JSONArray jsonArray = new JSONArray(response);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    Product product = new Product(
+                            obj.getInt("id"),
+                            obj.getString("name"),
+                            obj.getDouble("price"),
+                            obj.getString("image"),
+                            obj.getString("description"),
+                            obj.getInt("category_id")
+                    );
+                    products.add(product);
+                }
+                return products;
+            } catch (Exception e) {
+                error = "Error: " + e.getMessage();
+                Log.e("Supabase", "Failed to load recommended products: " + error);
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<Product> products) {
+            if (error != null) {
+                callback.onError(error);
+            } else {
+                callback.onSuccess(products);
+            }
+        }
+    }
 }

@@ -68,4 +68,61 @@ public class UserContext {
             }
         }
     }
+
+    public static void getUserId(String loginOrEmailOrPhone, UserIdCallback callback) {
+        new GetUserIdTask(loginOrEmailOrPhone, callback).execute();
+    }
+
+    public interface UserIdCallback {
+        void onSuccess(String userId);
+        void onError(String error);
+    }
+
+    private static class GetUserIdTask extends AsyncTask<Void, Void, String> {
+        private final String loginOrEmailOrPhone;
+        private final UserIdCallback callback;
+        private String error;
+
+        GetUserIdTask(String loginOrEmailOrPhone, UserIdCallback callback) {
+            this.loginOrEmailOrPhone = loginOrEmailOrPhone;
+            this.callback = callback;
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            try {
+                String url = URL + "?or=" +
+                        URLEncoder.encode("(login.eq." + loginOrEmailOrPhone +
+                                ",email.eq." + loginOrEmailOrPhone +
+                                ",phone_number.eq." + loginOrEmailOrPhone + ")") +
+                        "&select=id";
+
+                Document doc = Jsoup.connect(url)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .ignoreContentType(true)
+                        .get();
+
+                JSONArray jsonArray = new JSONArray(doc.body().text());
+                if (jsonArray.length() > 0) {
+                    return jsonArray.getJSONObject(0).getString("id");
+                }
+                return null;
+            } catch (Exception e) {
+                error = "Error: " + e.getMessage();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String userId) {
+            if (error != null) {
+                callback.onError(error);
+            } else if (userId != null) {
+                callback.onSuccess(userId);
+            } else {
+                callback.onError("User not found");
+            }
+        }
+    }
 }

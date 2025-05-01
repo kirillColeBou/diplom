@@ -58,15 +58,30 @@ public class AuthorizationActivity extends AppCompatActivity {
             public void onSuccess(boolean userExists) {
                 runOnUiThread(() -> {
                     if (userExists) {
-                        startActivity(new Intent(AuthorizationActivity.this, MainActivity.class));
-                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-                        finish();
+                        UserContext.getUserId(loginOrEmailOrPhone, new UserContext.UserIdCallback() {
+                            @Override
+                            public void onSuccess(String userId) {
+                                AuthUtils.saveUserCredentials(AuthorizationActivity.this,
+                                        loginOrEmailOrPhone, hashedPassword, userId);
+                                startActivity(new Intent(AuthorizationActivity.this, MainActivity.class));
+                                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                                finish();
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                Toast.makeText(AuthorizationActivity.this,
+                                        "Ошибка получения данных пользователя",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     } else {
                         Toast.makeText(AuthorizationActivity.this,
                                 "Неверные учетные данные", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
+
             @Override
             public void onError(String error) {
                 runOnUiThread(() ->
