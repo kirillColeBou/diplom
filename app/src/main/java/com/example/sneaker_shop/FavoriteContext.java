@@ -2,9 +2,15 @@ package com.example.sneaker_shop;
 
 import android.os.AsyncTask;
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jsoup.Connection;
 
 public class FavoriteContext {
@@ -88,7 +94,6 @@ public class FavoriteContext {
         protected Boolean doInBackground(Void... voids) {
             try {
                 if (isCurrentlyFavorite) {
-                    // Удаляем из избранного
                     String url = URL + "?user_id=eq." + userId + "&product_id=eq." + productId;
                     Connection.Response response = Jsoup.connect(url)
                             .header("Authorization", TOKEN)
@@ -98,7 +103,6 @@ public class FavoriteContext {
                             .execute();
                     return !(response.statusCode() == 200 || response.statusCode() == 204);
                 } else {
-                    // Добавляем в избранное
                     String json = String.format("{\"user_id\":\"%s\",\"product_id\":\"%s\"}", userId, productId);
                     Connection.Response response = Jsoup.connect(URL)
                             .header("Authorization", TOKEN)
@@ -126,6 +130,69 @@ public class FavoriteContext {
                 callback.onSuccess(!isCurrentlyFavorite);
             } else {
                 callback.onError("Unknown error occurred");
+            }
+        }
+    }
+
+    public interface FavoritesCallback {
+        void onSuccess(List<Product> products);
+        void onError(String error);
+    }
+
+    public static void loadFavorites(String userId, FavoritesCallback callback) {
+        new LoadFavoritesTask(userId, callback).execute();
+    }
+
+    private static class LoadFavoritesTask extends AsyncTask<Void, Void, List<Product>> {
+        private final String userId;
+        private final FavoritesCallback callback;
+        private String error;
+
+        LoadFavoritesTask(String userId, FavoritesCallback callback) {
+            this.userId = userId;
+            this.callback = callback;
+        }
+
+        @Override
+        protected List<Product> doInBackground(Void... voids) {
+            try {
+                String url = URL + "?select=product:products(*)&user_id=eq." + userId;
+                Document doc = Jsoup.connect(url)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .ignoreContentType(true)
+                        .get();
+
+                String response = doc.body().text();
+                JSONArray jsonArray = new JSONArray(response);
+                List<Product> products = new ArrayList<>();
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i).getJSONObject("product");
+                    Product product = new Product(
+                            obj.getInt("id"),
+                            obj.getString("name"),
+                            obj.getDouble("price"),
+                            obj.getString("image"),
+                            obj.getString("description"),
+                            obj.getInt("category_id")
+                    );
+                    products.add(product);
+                }
+                return products;
+            } catch (Exception e) {
+                error = "Error loading favorites: " + e.getMessage();
+                Log.e("FavoriteContext", error);
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<Product> products) {
+            if (error != null) {
+                callback.onError(error);
+            } else {
+                callback.onSuccess(products);
             }
         }
     }

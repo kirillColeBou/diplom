@@ -51,12 +51,48 @@
             android:layout_marginBottom="15dp"
             android:background="@drawable/background_favorite_activity">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view_products"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingBottom="80dp"/>
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view_favorite"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingBottom="80dp"/>
+
+                <LinearLayout
+                    android:id="@+id/empty_favorite"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="32dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="В избранном пока пусто"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#2B2B2B"
+                        android:layout_gravity="center_horizontal"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Присмотритесь к парам,\nкоторые подобрали для вас"
+                        android:textSize="16sp"
+                        android:layout_marginTop="8dp"
+                        android:textColor="#2B2B2B"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"/>
+
+                </LinearLayout>
+
+            </FrameLayout>
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
         <!--Подвал-->

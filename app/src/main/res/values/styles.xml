@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="BottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/CustomBottomSheetStyle</item>
+        <item name="android:windowEnterAnimation">@anim/bottom_sheet_slide_up</item>
+        <item name="android:windowExitAnimation">@anim/bottom_sheet_slide_down</item>
+        <item name="android:windowAnimationStyle">@style/BottomSheetAnimation</item>
+    </style>
+
+    <style name="BottomSheetAnimation">
+        <item name="android:windowEnterAnimation">@anim/bottom_sheet_slide_up</item>
+        <item name="android:windowExitAnimation">@anim/bottom_sheet_slide_down</item>
+    </style>
+
+    <style name="CustomBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="behavior_peekHeight">0dp</item>
+        <item name="behavior_hideable">true</item>
+        <item name="android:minHeight">0dp</item>
+    </style>
+</resources>
