@@ -210,7 +210,9 @@ public class FavoriteActivity extends AppCompatActivity {
     }
 
     public void onMenu(View view) {
-        // Реализация меню
+        startActivity(new Intent(this, MenuActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 
     public void onCart(View view) {

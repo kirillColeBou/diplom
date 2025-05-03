@@ -58,6 +58,7 @@ dependencies {
     implementation("com.google.android.material:material:1.6.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("jp.wasabeef:recyclerview-animators:4.0.2")
+    implementation("de.hdodenhof:circleimageview:3.1.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

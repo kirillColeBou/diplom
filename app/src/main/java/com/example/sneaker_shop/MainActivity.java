@@ -214,7 +214,9 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     }
 
     public void onMenu(View view) {
-        // Реализация меню
+        startActivity(new Intent(this, MenuActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 
     public void onFavorite(View view) {
