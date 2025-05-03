@@ -25,6 +25,7 @@
                 android:background="@drawable/background_image_person">
 
                 <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/person_image"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:src="@drawable/image_person"/>
@@ -39,6 +40,7 @@
                 android:layout_marginTop="15dp">
 
                 <TextView
+                    android:id="@+id/login"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Здесь ваш логин"
