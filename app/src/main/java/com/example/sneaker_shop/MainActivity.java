@@ -222,6 +222,7 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     public void onFavorite(View view) {
         startActivity(new Intent(this, FavoriteActivity.class));
         overridePendingTransition(0, 0);
+        finish();
     }
 
     public void onCart(View view) {
@@ -229,7 +230,9 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     }
 
     public void onPerson(View view) {
-        // Реализация профиля
+        startActivity(new Intent(this, PersonActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 
     public void onSearch(View view) {

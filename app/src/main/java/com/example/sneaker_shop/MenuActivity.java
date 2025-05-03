@@ -31,7 +31,9 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     public void onPerson(View view){
-
+        startActivity(new Intent(this, PersonActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 
     public void onDelivery(View view){

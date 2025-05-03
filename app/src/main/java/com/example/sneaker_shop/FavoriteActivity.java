@@ -220,6 +220,8 @@ public class FavoriteActivity extends AppCompatActivity {
     }
 
     public void onPerson(View view) {
-        // Реализация профиля
+        startActivity(new Intent(this, PersonActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 }
