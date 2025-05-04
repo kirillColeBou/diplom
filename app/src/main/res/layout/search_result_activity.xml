@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".SearchActivity"
+    tools:context=".SearchResultActivity"
     android:background="#F7F7F7">
 
     <LinearLayout
@@ -23,6 +23,7 @@
                 android:layout_marginTop="35dp"
                 android:layout_marginRight="15dp"
                 android:layout_marginLeft="15dp"
+                android:layout_marginBottom="15dp"
                 android:paddingTop="12dp"
                 android:paddingBottom="12dp"
                 android:paddingLeft="10dp"
@@ -37,21 +38,17 @@
                     android:layout_gravity="center"
                     android:onClick="onBack"/>
 
-                <EditText
-                    android:id="@+id/search"
+                <TextView
+                    android:id="@+id/searchResult"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="12dp"
                     android:layout_marginRight="12dp"
-                    android:background="#F7F7F9"
-                    android:hint="Найти пару"
+                    android:text="Найти пару"
                     android:textSize="16sp"
-                    android:textColorHint="#B4B3B1"
                     android:maxLines="1"
                     android:textColor="#2B2B2B"
-                    android:layout_weight="1"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text"/>
+                    android:layout_weight="1"/>
 
                 <LinearLayout
                     android:id="@+id/suggestionsContainer"
@@ -88,44 +85,66 @@
 
             </LinearLayout>
 
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/findElement"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FFFFFF"
+            android:orientation="vertical">
+
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="25dp"
-                android:layout_marginRight="15dp"
+                android:layout_height="25dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="40dp"
                 android:layout_marginLeft="15dp"
-                android:layout_marginBottom="15dp">
+                android:layout_marginRight="15dp"
+                android:orientation="horizontal"
+                android:weightSum="5">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/home_select"
+                    android:onClick="onHome"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Вы искали"
-                        android:textColor="#2B2B2B"
-                        android:textStyle="bold"
-                        android:textSize="15dp"
-                        android:layout_weight="1"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/menu"
+                    android:onClick="onMenu"/>
 
-                    <ImageView
-                        android:id="@+id/editHistoryButton"
-                        android:layout_width="18dp"
-                        android:layout_height="14dp"
-                        android:src="@drawable/redac_search"
-                        android:layout_gravity="center"
-                        android:onClick="onRedact"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/favorite"
+                    android:onClick="onFavorite"/>
 
-                </LinearLayout>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/cart"
+                    android:onClick="onCart"/>
 
-                <org.apmem.tools.layouts.FlowLayout
-                    android:id="@+id/searchHistoryContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/person"
+                    android:onClick="onPerson"/>
 
             </LinearLayout>
 

@@ -185,6 +185,7 @@
                     android:onClick="onPerson"/>
 
             </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>

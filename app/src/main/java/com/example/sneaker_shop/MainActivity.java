@@ -236,6 +236,8 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     }
 
     public void onSearch(View view) {
-        // Реализация поиска
+        startActivity(new Intent(this, SearchActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 }

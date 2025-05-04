@@ -30,6 +30,9 @@
         <activity android:name=".AuthorizationActivity"/>
         <activity android:name=".MainActivity"/>
         <activity android:name=".MenuActivity"/>
+        <activity android:name=".SearchActivity"/>
+        <activity android:name=".SearchResultActivity"/>
+        <activity android:name=".CartActivity"/>
         <activity android:name=".PersonActivity"/>
         <activity android:name=".FavoriteActivity"/>
         <activity android:name=".RegisterActivity"/>
