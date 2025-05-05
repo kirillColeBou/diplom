@@ -15,15 +15,24 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
     private final List<Product> favoriteProducts;
     private final Context context;
     private OnMoreClickListener moreClickListener;
+    private OnAddToCartClickListener cartClickListener;
 
     public interface OnMoreClickListener {
         void onMoreClick(int position);
     }
 
+    public interface OnAddToCartClickListener {
+        void onAddToCartClick(Product product);
+    }
+
     public FavoriteAdapter(List<Product> favoriteProducts, Context context, OnMoreClickListener listener) {
-        this.moreClickListener = listener;
         this.favoriteProducts = favoriteProducts;
         this.context = context;
+        this.moreClickListener = listener;
+    }
+
+    public void setOnAddToCartClickListener(OnAddToCartClickListener listener) {
+        this.cartClickListener = listener;
     }
 
     @NonNull
@@ -41,10 +50,15 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
         holder.priceProduct.setText(String.format("%d ₽", (int) product.getPrice()));
         holder.favoriteIcon.setVisibility(View.GONE);
         holder.moreFavorite.setVisibility(View.VISIBLE);
+        holder.addToCartButton.setVisibility(View.VISIBLE);
         holder.moreFavorite.setOnClickListener(v -> {
-            int actualPosition = holder.getAbsoluteAdapterPosition();
-            if (actualPosition != RecyclerView.NO_POSITION && moreClickListener != null) {
-                moreClickListener.onMoreClick(actualPosition);
+            if (moreClickListener != null) {
+                moreClickListener.onMoreClick(holder.getAdapterPosition());
+            }
+        });
+        holder.addToCartButton.setOnClickListener(v -> {
+            if (cartClickListener != null) {
+                cartClickListener.onAddToCartClick(product);
             }
         });
     }
@@ -60,6 +74,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
         TextView priceProduct;
         ImageView favoriteIcon;
         LinearLayout moreFavorite;
+        LinearLayout addToCartButton;
 
         public FavoriteViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -68,6 +83,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
             priceProduct = itemView.findViewById(R.id.price_product);
             favoriteIcon = itemView.findViewById(R.id.favorite_icon);
             moreFavorite = itemView.findViewById(R.id.more_favorite);
+            addToCartButton = itemView.findViewById(R.id.add_to_cart_button);
         }
     }
 }
