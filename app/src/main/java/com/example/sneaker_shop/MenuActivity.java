@@ -96,7 +96,9 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     public void onCart(View view){
-        // Реализация перехода в корзину
+        startActivity(new Intent(this, CartActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 
     public void onPerson(View view){
@@ -107,10 +109,6 @@ public class MenuActivity extends AppCompatActivity {
 
     public void onDelivery(View view){
         // Реализация перехода к заказам
-    }
-
-    public void onNotification(View view){
-        // Реализация перехода к уведомлениям
     }
 
     public void onLogout(View view) {

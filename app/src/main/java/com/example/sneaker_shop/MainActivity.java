@@ -226,7 +226,9 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     }
 
     public void onCart(View view) {
-        // Реализация корзины
+        startActivity(new Intent(this, CartActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 
     public void onPerson(View view) {

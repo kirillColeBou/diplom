@@ -156,6 +156,8 @@ public class SearchResultActivity extends AppCompatActivity
     }
 
     public void onCart(View view) {
-
+        startActivity(new Intent(this, CartActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 }

@@ -440,6 +440,8 @@ public class PersonActivity extends AppCompatActivity {
     }
 
     public void onCart(View view){
-        // Реализация перехода в корзину
+        startActivity(new Intent(this, CartActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 }

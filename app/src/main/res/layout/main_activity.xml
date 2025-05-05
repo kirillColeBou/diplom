@@ -71,15 +71,6 @@
                     android:textColor="#2B2B2B"
                     android:layout_weight="1"/>
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/microphone"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginRight="7.5dp"/>
-
             </LinearLayout>
 
         </LinearLayout>
