@@ -32,8 +32,6 @@
         <activity android:name=".MenuActivity"/>
         <activity android:name=".SearchActivity"/>
         <activity android:name=".SearchResultActivity"/>
-        <activity android:name=".DeliveryActivity"/>
-        <activity android:name=".CartActivity"/>
         <activity android:name=".ProductInfoActivity"/>
         <activity android:name=".PersonActivity"/>
         <activity android:name=".FavoriteActivity"/>

@@ -174,46 +174,6 @@ public class FavoriteActivity extends AppCompatActivity {
             showBottomSheet(position);
         });
         recyclerView.setAdapter(adapter);
-        adapter = new FavoriteAdapter(favoriteProducts, this, position -> {
-            showBottomSheet(position);
-        });
-        adapter.setOnAddToCartClickListener(product -> {
-            addToCart(product);
-        });
-        recyclerView.setAdapter(adapter);
-    }
-
-    private void addToCart(Product product) {
-        CartContext.getUserBasket(currentUserId, new CartContext.BasketCallback() {
-            @Override
-            public void onSuccess(String basketId) {
-                CartContext.addToBasket(basketId, String.valueOf(product.getId()), 1, new CartContext.AddToBasketCallback() {
-                    @Override
-                    public void onSuccess() {
-                        runOnUiThread(() -> {
-                            Toast.makeText(FavoriteActivity.this,
-                                    "Товар добавлен в корзину", Toast.LENGTH_SHORT).show();
-                        });
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        runOnUiThread(() -> {
-                            Toast.makeText(FavoriteActivity.this,
-                                    "Ошибка: " + error, Toast.LENGTH_SHORT).show();
-                        });
-                    }
-                });
-            }
-
-            @Override
-            public void onError(String error) {
-                runOnUiThread(() -> {
-                    Toast.makeText(FavoriteActivity.this,
-                            "Ошибка: " + error, Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
     }
 
 
@@ -252,12 +212,6 @@ public class FavoriteActivity extends AppCompatActivity {
 
     public void onMenu(View view) {
         startActivity(new Intent(this, MenuActivity.class));
-        overridePendingTransition(0, 0);
-        finish();
-    }
-
-    public void onCart(View view) {
-        startActivity(new Intent(this, CartActivity.class));
         overridePendingTransition(0, 0);
         finish();
     }

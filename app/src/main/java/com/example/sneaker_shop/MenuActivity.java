@@ -95,20 +95,10 @@ public class MenuActivity extends AppCompatActivity {
         finish();
     }
 
-    public void onCart(View view){
-        startActivity(new Intent(this, CartActivity.class));
-        overridePendingTransition(0, 0);
-        finish();
-    }
-
     public void onPerson(View view){
         startActivity(new Intent(this, PersonActivity.class));
         overridePendingTransition(0, 0);
         finish();
-    }
-
-    public void onDelivery(View view){
-        // Реализация перехода к заказам
     }
 
     public void onLogout(View view) {
