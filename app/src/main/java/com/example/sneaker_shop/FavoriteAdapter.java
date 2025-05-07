@@ -1,6 +1,9 @@
 package com.example.sneaker_shop;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,24 +18,24 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
     private final List<Product> favoriteProducts;
     private final Context context;
     private OnMoreClickListener moreClickListener;
-    private OnAddToCartClickListener cartClickListener;
+    private OnItemClickListener itemClickListener;
+
+    public interface OnItemClickListener {
+        void onItemClick(Product product);
+    }
 
     public interface OnMoreClickListener {
         void onMoreClick(int position);
     }
 
-    public interface OnAddToCartClickListener {
-        void onAddToCartClick(Product product);
-    }
-
-    public FavoriteAdapter(List<Product> favoriteProducts, Context context, OnMoreClickListener listener) {
+    public FavoriteAdapter(List<Product> favoriteProducts, Context context, OnMoreClickListener moreListener) {
         this.favoriteProducts = favoriteProducts;
         this.context = context;
-        this.moreClickListener = listener;
+        this.moreClickListener = moreListener;
     }
 
-    public void setOnAddToCartClickListener(OnAddToCartClickListener listener) {
-        this.cartClickListener = listener;
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.itemClickListener = listener;
     }
 
     @NonNull
@@ -48,8 +51,29 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
         Product product = favoriteProducts.get(position);
         holder.nameProduct.setText(product.getName());
         holder.priceProduct.setText(String.format("%d ₽", (int) product.getPrice()));
+
+        // Загрузка изображения
+        if (product.getImage() != null && !product.getImage().isEmpty()) {
+            try {
+                String base64Image = product.getImage().split(",")[1];
+                byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                holder.imageProduct.setImageBitmap(decodedByte);
+            } catch (Exception e) {
+                holder.imageProduct.setImageResource(R.drawable.nike_air_force);
+            }
+        }
+
         holder.favoriteIcon.setVisibility(View.GONE);
         holder.moreFavorite.setVisibility(View.VISIBLE);
+
+        // Обработчик клика на весь элемент
+        holder.itemView.setOnClickListener(v -> {
+            if (itemClickListener != null) {
+                itemClickListener.onItemClick(product);
+            }
+        });
+
         holder.moreFavorite.setOnClickListener(v -> {
             if (moreClickListener != null) {
                 moreClickListener.onMoreClick(holder.getAdapterPosition());

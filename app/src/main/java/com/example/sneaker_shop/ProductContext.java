@@ -2,12 +2,10 @@ package com.example.sneaker_shop;
 
 import android.os.AsyncTask;
 import android.util.Log;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
 import java.util.ArrayList;
 import java.util.List;
 

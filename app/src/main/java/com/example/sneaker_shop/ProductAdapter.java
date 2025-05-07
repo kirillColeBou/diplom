@@ -1,6 +1,7 @@
 package com.example.sneaker_shop;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
@@ -73,7 +74,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 Log.e("ProductAdapter", "Error checking favorite status: " + error);
             }
         });
-
         holder.favoriteIcon.setOnClickListener(v -> {
             int currentPosition = holder.getAdapterPosition();
             if (currentPosition == RecyclerView.NO_POSITION) return;
@@ -111,6 +111,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                             }
                         }
                     });
+        });
+        holder.itemView.setOnClickListener(v -> {
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition != RecyclerView.NO_POSITION) {
+                Product clickedProduct = productList.get(currentPosition);
+                Intent intent = new Intent(context, ProductInfoActivity.class);
+                intent.putExtra("product", clickedProduct);
+                context.startActivity(intent);
+            }
         });
     }
 

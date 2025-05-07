@@ -1,0 +1,86 @@
+package com.example.sneaker_shop;
+
+import android.os.AsyncTask;
+import android.text.TextUtils;
+import android.util.Log;
+import android.util.Pair;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SizeContext {
+    private static final String URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/";
+    private static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
+    private static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
+
+    public interface AllSizesCallback {
+        void onSuccess(List<Size> allSizes, List<ProductSize> productSizes);
+        void onError(String error);
+    }
+
+    public static void loadAllSizesAndProductSizes(int productId, AllSizesCallback callback) {
+        new LoadAllSizesTask(productId, callback).execute();
+    }
+
+    private static class LoadAllSizesTask extends AsyncTask<Void, Void, Pair<List<Size>, List<ProductSize>>> {
+        private final int productId;
+        private final AllSizesCallback callback;
+        private String error;
+
+        LoadAllSizesTask(int productId, AllSizesCallback callback) {
+            this.productId = productId;
+            this.callback = callback;
+        }
+
+        @Override
+        protected Pair<List<Size>, List<ProductSize>> doInBackground(Void... voids) {
+            try {
+                String allSizesUrl = URL + "sizes?order=value.asc";
+                Document allSizesDoc = Jsoup.connect(allSizesUrl)
+                        .header("apikey", SECRET)
+                        .header("Authorization", TOKEN)
+                        .ignoreContentType(true)
+                        .get();
+                JSONArray allSizesArray = new JSONArray(allSizesDoc.body().text());
+                List<Size> allSizes = new ArrayList<>();
+                for (int i = 0; i < allSizesArray.length(); i++) {
+                    JSONObject obj = allSizesArray.getJSONObject(i);
+                    allSizes.add(new Size(obj.getInt("id"), obj.getString("value")));
+                }
+                String productSizesUrl = URL + "product_size?product_id=eq." + productId;
+                Document productSizesDoc = Jsoup.connect(productSizesUrl)
+                        .header("apikey", SECRET)
+                        .header("Authorization", TOKEN)
+                        .ignoreContentType(true)
+                        .get();
+                JSONArray productSizesArray = new JSONArray(productSizesDoc.body().text());
+                List<ProductSize> productSizes = new ArrayList<>();
+                for (int i = 0; i < productSizesArray.length(); i++) {
+                    JSONObject obj = productSizesArray.getJSONObject(i);
+                    productSizes.add(new ProductSize(
+                            obj.getInt("id"),
+                            obj.getInt("product_id"),
+                            obj.getInt("size_id"),
+                            obj.getInt("count")
+                    ));
+                }
+                return new Pair<>(allSizes, productSizes);
+            } catch (Exception e) {
+                error = "Error loading sizes: " + e.getMessage();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Pair<List<Size>, List<ProductSize>> result) {
+            if (error != null) {
+                callback.onError(error);
+            } else {
+                callback.onSuccess(result.first, result.second);
+            }
+        }
+    }
+}

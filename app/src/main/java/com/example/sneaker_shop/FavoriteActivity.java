@@ -170,9 +170,18 @@ public class FavoriteActivity extends AppCompatActivity {
         });
         recyclerView.setClipToPadding(false);
         recyclerView.setPadding(spacingInPixels, 0, spacingInPixels, 0);
+
         adapter = new FavoriteAdapter(favoriteProducts, this, position -> {
             showBottomSheet(position);
         });
+
+        // Добавляем обработчик клика на элемент
+        adapter.setOnItemClickListener(product -> {
+            Intent intent = new Intent(FavoriteActivity.this, ProductInfoActivity.class);
+            intent.putExtra("product", product);
+            startActivity(intent);
+        });
+
         recyclerView.setAdapter(adapter);
     }
 

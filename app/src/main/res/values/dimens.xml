@@ -3,4 +3,5 @@
     <dimen name="category_item_margin">8dp</dimen>
     <dimen name="item_spacing">10dp</dimen>
     <dimen name="favorite_item_spacing">16dp</dimen>
+    <dimen name="size_item_spacing">15dp</dimen>
 </resources>
