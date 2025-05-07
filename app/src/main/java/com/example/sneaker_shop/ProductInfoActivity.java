@@ -12,6 +12,7 @@ import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
@@ -27,6 +28,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProductInfoActivity extends AppCompatActivity implements SizeAdapter.OnSizeSelectedListener {
@@ -40,21 +43,51 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     private RecyclerView sizesRecyclerView;
     private TextView stockCountTextView;
     private SizeAdapter sizeAdapter;
+    private ImageView favoriteIcon;
+    private LinearLayout favoriteButton;
+    private boolean isFavorite = false;
+    private String currentUserId;
+    private Product currentProduct;
+    private RecyclerView sameProductsRecyclerView;
+    private LinearLayout sameProductsContainer;
+    private SameProductAdapter sameProductAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.product_info_activity);
         initViews();
-        loadProductData();
-        initViews();
-        loadProductData();
-        setupSizesRecyclerView();
-        Product product = (Product) getIntent().getSerializableExtra("product");
-        if (product != null) {
-            loadSizesForProduct(product.getId());
+        currentUserId = AuthUtils.getCurrentUserId(this);
+        currentProduct = (Product) getIntent().getSerializableExtra("product");
+        if (currentProduct != null) {
+            loadProductData();
+            loadSameProducts();
+            loadSizesForProduct(currentProduct.getId());
         }
+        checkFavoriteStatus();
+        setupListeners();
+        setupDescriptionAnimation();
+        setupSizesRecyclerView();
+    }
+
+    private void initViews() {
+        descriptionTextView = findViewById(R.id.productDescription);
+        expandCollapseButton = findViewById(R.id.expandCollapseButton);
+        descriptionContainer = findViewById(R.id.descriptionContainer);
+        sizesRecyclerView = findViewById(R.id.sizesRecyclerView);
+        stockCountTextView = findViewById(R.id.stockCountTextView);
+        favoriteButton = findViewById(R.id.favoriteButton);
+        favoriteIcon = findViewById(R.id.favoriteIcon);
+        sameProductsRecyclerView = findViewById(R.id.sameProductsRecyclerView);
+        sameProductsContainer = findViewById(R.id.sameProductsContainer);
+    }
+
+    private void setupListeners() {
+        favoriteButton.setOnClickListener(v -> toggleFavorite());
         expandCollapseButton.setOnClickListener(v -> toggleDescription());
+    }
+
+    private void setupDescriptionAnimation() {
         descriptionContainer.post(() -> {
             descriptionTextView.setMaxLines(3);
             descriptionTextView.setEllipsize(TextUtils.TruncateAt.END);
@@ -71,12 +104,93 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         });
     }
 
-    private void initViews() {
-        descriptionTextView = findViewById(R.id.productDescription);
-        expandCollapseButton = findViewById(R.id.expandCollapseButton);
-        descriptionContainer = findViewById(R.id.descriptionContainer);
-        sizesRecyclerView = findViewById(R.id.sizesRecyclerView);
-        stockCountTextView = findViewById(R.id.stockCountTextView);
+    private void loadSameProducts() {
+        if (currentProduct == null) return;
+
+        ProductContext.loadProducts(new ProductContext.ProductsCallback() {
+            @Override
+            public void onSuccess(List<Product> allProducts) {
+                List<Product> sameProducts = findSameProducts(allProducts);
+                runOnUiThread(() -> {
+                    if (sameProducts.size() > 1) {
+                        setupSameProductsRecyclerView(sameProducts);
+                        sameProductsContainer.setVisibility(View.VISIBLE);
+                    } else {
+                        sameProductsContainer.setVisibility(View.GONE);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("ProductInfo", "Error loading same products: " + error);
+                sameProductsContainer.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private List<Product> findSameProducts(List<Product> allProducts) {
+        List<Product> result = new ArrayList<>();
+        String baseName = extractBaseName(currentProduct.getName());
+        result.add(currentProduct);
+        for (Product product : allProducts) {
+            if (product.getId() != currentProduct.getId() &&
+                    extractBaseName(product.getName()).equalsIgnoreCase(baseName)) {
+                result.add(product);
+            }
+        }
+        return result;
+    }
+
+    private String extractBaseName(String fullName) {
+        return fullName.replaceAll("\\(.*\\)", "")
+                .replaceAll("\".*\"", "")
+                .replaceAll(" - .*", "")
+                .trim();
+    }
+
+    private void setupSameProductsRecyclerView(List<Product> sameProducts) {
+        sameProductAdapter = new SameProductAdapter(sameProducts, this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(
+                this, LinearLayoutManager.HORIZONTAL, false);
+        sameProductsRecyclerView.setLayoutManager(layoutManager);
+        int spacing = getResources().getDimensionPixelSize(R.dimen.same_product_spacing);
+        sameProductsRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(Rect outRect, View view,
+                                       RecyclerView parent, RecyclerView.State state) {
+                outRect.right = spacing;
+            }
+        });
+        sameProductsRecyclerView.setClipToPadding(false);
+        sameProductsRecyclerView.setPadding(spacing, 0, spacing, 0);
+        sameProductsRecyclerView.setAdapter(sameProductAdapter);
+        sameProductAdapter.setOnItemClickListener(position -> {
+            Product selectedProduct = sameProducts.get(position);
+            updateProductInfo(selectedProduct);
+            sameProductAdapter.setSelectedPosition(position);
+        });
+    }
+
+    private void updateProductInfo(Product product) {
+        TextView productNameTextView = findViewById(R.id.productName);
+        TextView priceTextView = findViewById(R.id.productPrice);
+        ImageView productImageView = findViewById(R.id.productImage);
+        productNameTextView.setText(product.getName());
+        priceTextView.setText(String.format("₽ %.2f", product.getPrice()));
+        if (product.getImage() != null && !product.getImage().isEmpty()) {
+            try {
+                String base64Image = product.getImage().split(",")[1];
+                byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                productImageView.setImageBitmap(decodedByte);
+            } catch (Exception e) {
+                productImageView.setImageResource(R.drawable.nike_air_force);
+            }
+        }
+        currentProduct = product;
+        loadSizesForProduct(product.getId());
+        checkFavoriteStatus();
     }
 
     private void setupSizesRecyclerView() {
@@ -167,24 +281,82 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void loadProductData() {
-        Product product = (Product) getIntent().getSerializableExtra("product");
-        if (product != null) {
-            TextView productNameTextView = findViewById(R.id.productName);
-            TextView priceTextView = findViewById(R.id.productPrice);
-            ImageView productImageView = findViewById(R.id.productImage);
-            productNameTextView.setText(product.getName());
-            priceTextView.setText(String.format("₽ %.2f", product.getPrice()));
-            descriptionTextView.setText(product.getDescription());
-            if (product.getImage() != null && !product.getImage().isEmpty()) {
-                try {
-                    String base64Image = product.getImage().split(",")[1];
-                    byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    productImageView.setImageBitmap(decodedByte);
-                } catch (Exception e) {
-                    productImageView.setImageResource(R.drawable.nike_air_force);
+        currentProduct = (Product) getIntent().getSerializableExtra("product");
+        if (currentProduct != null) {
+            Product product = (Product) getIntent().getSerializableExtra("product");
+            if (product != null) {
+                TextView productNameTextView = findViewById(R.id.productName);
+                TextView priceTextView = findViewById(R.id.productPrice);
+                ImageView productImageView = findViewById(R.id.productImage);
+                productNameTextView.setText(product.getName());
+                priceTextView.setText(String.format("₽ %.2f", product.getPrice()));
+                descriptionTextView.setText(product.getDescription());
+                if (product.getImage() != null && !product.getImage().isEmpty()) {
+                    try {
+                        String base64Image = product.getImage().split(",")[1];
+                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        productImageView.setImageBitmap(decodedByte);
+                    } catch (Exception e) {
+                        productImageView.setImageResource(R.drawable.nike_air_force);
+                    }
                 }
             }
+        }
+    }
+
+    private void checkFavoriteStatus() {
+        if (currentUserId == null || currentProduct == null) return;
+        FavoriteContext.checkFavorite(currentUserId, String.valueOf(currentProduct.getId()),
+                new FavoriteContext.FavoriteCallback() {
+                    @Override
+                    public void onSuccess(boolean isFavorite) {
+                        runOnUiThread(() -> {
+                            updateFavoriteIcon(isFavorite);
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e("ProductInfo", "Error checking favorite: " + error);
+                    }
+                });
+    }
+
+    private void toggleFavorite() {
+        if (!AuthUtils.isUserLoggedIn(this)) {
+            startActivity(new Intent(this, AuthorizationActivity.class));
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            return;
+        }
+        if (currentUserId == null || currentProduct == null) return;
+        FavoriteContext.toggleFavorite(currentUserId, String.valueOf(currentProduct.getId()),
+                isFavorite, new FavoriteContext.FavoriteCallback() {
+                    @Override
+                    public void onSuccess(boolean newFavoriteStatus) {
+                        runOnUiThread(() -> {
+                            isFavorite = newFavoriteStatus;
+                            updateFavoriteIcon(isFavorite);
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(ProductInfoActivity.this,
+                                    "Ошибка: " + error,
+                                    Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                });
+    }
+
+    private void updateFavoriteIcon(boolean isFavorite) {
+        this.isFavorite = isFavorite;
+        if (isFavorite) {
+            favoriteIcon.setImageResource(R.drawable.favorite_item_select);
+        } else {
+            favoriteIcon.setImageResource(R.drawable.favorite_item);
         }
     }
 

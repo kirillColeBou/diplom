@@ -51,6 +51,7 @@
                     android:gravity="center"/>
 
                 <LinearLayout
+                    android:id="@+id/favoriteButton"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:layout_marginTop="35dp"
@@ -59,6 +60,7 @@
                     android:background="@drawable/background_favorite_product_info">
 
                     <ImageView
+                        android:id="@+id/favoriteIcon"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:padding="5dp"
@@ -117,6 +119,7 @@
                 android:layout_marginRight="15dp"/>
 
             <LinearLayout
+                android:id="@+id/sameProductsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -131,42 +134,12 @@
                     android:textColor="#2B2B2B"
                     android:textSize="16sp"/>
 
-                <LinearLayout
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/sameProductsRecyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="55dp"
                     android:layout_marginTop="15dp"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="55dp"
-                        android:layout_height="55dp"
-                        android:background="@drawable/background_other_sneaker_select">
-
-                        <ImageView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:src="@drawable/nike_air_force"
-                            android:paddingLeft="5dp"
-                            android:paddingRight="5dp"/>
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="55dp"
-                        android:layout_height="55dp"
-                        android:layout_marginLeft="15dp"
-                        android:background="@drawable/background_other_sneaker">
-
-                        <ImageView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:src="@drawable/nike_air_force"
-                            android:paddingLeft="5dp"
-                            android:paddingRight="5dp"/>
-
-                    </LinearLayout>
-
-                </LinearLayout>
+                    android:orientation="horizontal"/>
 
             </LinearLayout>
 
