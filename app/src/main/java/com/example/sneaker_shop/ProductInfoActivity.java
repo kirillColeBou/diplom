@@ -1,33 +1,35 @@
 package com.example.sneaker_shop;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
-import android.text.style.UnderlineSpan;
+import android.util.Base64;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Base64;
-import android.widget.Toast;
+import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,39 +37,40 @@ import java.util.List;
 public class ProductInfoActivity extends AppCompatActivity implements SizeAdapter.OnSizeSelectedListener {
     private TextView descriptionTextView;
     private TextView expandCollapseButton;
-    private boolean isDescriptionExpanded = false;
     private LinearLayout descriptionContainer;
-    private int collapsedHeight;
-    private int expandedHeight;
-    private boolean isInitialized = false;
     private RecyclerView sizesRecyclerView;
     private TextView stockCountTextView;
-    private SizeAdapter sizeAdapter;
     private ImageView favoriteIcon;
     private LinearLayout favoriteButton;
+    private RecyclerView sameProductsRecyclerView;
+    private LinearLayout sameProductsContainer;
+    private ViewPager2 productImagesPager;
+    private LinearLayout imagesIndicator;
+    private ProgressBar topProgressBar;
+    private ScrollView contentScrollView;
+    private SizeAdapter sizeAdapter;
+    private SameProductAdapter sameProductAdapter;
+    private ProductImagesAdapter imagesAdapter;
+    private List<String> productImages = new ArrayList<>();
+    private boolean isDescriptionExpanded = false;
     private boolean isFavorite = false;
     private String currentUserId;
     private Product currentProduct;
-    private RecyclerView sameProductsRecyclerView;
-    private LinearLayout sameProductsContainer;
-    private SameProductAdapter sameProductAdapter;
+    private int collapsedHeight;
+    private int expandedHeight;
+    private boolean isInitialized = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.product_info_activity);
         initViews();
+        setupProgressBar();
         currentUserId = AuthUtils.getCurrentUserId(this);
         currentProduct = (Product) getIntent().getSerializableExtra("product");
         if (currentProduct != null) {
-            loadProductData();
-            loadSameProducts();
-            loadSizesForProduct(currentProduct.getId());
+            loadInitialData();
         }
-        checkFavoriteStatus();
-        setupListeners();
-        setupDescriptionAnimation();
-        setupSizesRecyclerView();
     }
 
     private void initViews() {
@@ -80,6 +83,158 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         favoriteIcon = findViewById(R.id.favoriteIcon);
         sameProductsRecyclerView = findViewById(R.id.sameProductsRecyclerView);
         sameProductsContainer = findViewById(R.id.sameProductsContainer);
+        productImagesPager = findViewById(R.id.productImagesPager);
+        imagesIndicator = findViewById(R.id.imagesIndicator);
+        topProgressBar = findViewById(R.id.topProgressBar);
+        contentScrollView = findViewById(R.id.contentScrollView);
+    }
+
+    private void setupProgressBar() {
+        topProgressBar.setVisibility(View.VISIBLE);
+        contentScrollView.setVisibility(View.INVISIBLE);
+        topProgressBar.setIndeterminate(true);
+    }
+
+    private void loadInitialData() {
+        updateBasicProductInfo(currentProduct);
+        new Thread(() -> {
+            for (int i = 0; i <= 100; i += 5) {
+                try {
+                    Thread.sleep(30);
+                    final int progress = i;
+                    runOnUiThread(() -> updateProgress(progress));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            loadHeavyData();
+            runOnUiThread(this::completeLoading);
+        }).start();
+    }
+
+    private void updateProgress(int progress) {
+        if (progress < 100) {
+            topProgressBar.setProgress(progress);
+        }
+    }
+
+    private void updateBasicProductInfo(Product product) {
+        TextView productNameTextView = findViewById(R.id.productName);
+        TextView priceTextView = findViewById(R.id.productPrice);
+        productNameTextView.setText(product.getName());
+        priceTextView.setText(String.format("₽ %.2f", product.getPrice()));
+        descriptionTextView.setText(product.getDescription());
+    }
+
+    private void loadHeavyData() {
+        runOnUiThread(() -> {
+            loadProductImages(currentProduct.getId());
+            loadSizesForProduct(currentProduct.getId());
+            loadSameProducts();
+            checkFavoriteStatus();
+            setupDescriptionAnimation();
+            setupSizesRecyclerView();
+        });
+        runOnUiThread(this::setupListeners);
+    }
+
+    private void completeLoading() {
+        topProgressBar.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction(() -> {
+                    topProgressBar.setVisibility(View.GONE);
+                    contentScrollView.setVisibility(View.VISIBLE);
+                    contentScrollView.setAlpha(0f);
+                    contentScrollView.animate().alpha(1f).setDuration(300).start();
+                })
+                .start();
+    }
+
+    private void loadProductImages(int productId) {
+        ImageContext.loadImagesForProduct(productId, new ImageContext.ImagesCallback() {
+            @Override
+            public void onSuccess(List<String> images) {
+                runOnUiThread(() -> {
+                    productImages.clear();
+                    productImages.addAll(images);
+                    setupImagesPager();
+                    setupImagesIndicator();
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("ProductInfo", "Error loading images: " + error);
+                runOnUiThread(() -> {
+                    productImages.clear();
+                    productImages.add("default_image_base64");
+                    setupImagesPager();
+                });
+            }
+        });
+    }
+
+    private void setupImagesPager() {
+        imagesAdapter = new ProductImagesAdapter(productImages);
+        productImagesPager.setAdapter(imagesAdapter);
+        productImagesPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                updateImagesIndicator(position);
+            }
+        });
+    }
+
+    private void setupImagesIndicator() {
+        runOnUiThread(() -> {
+            imagesIndicator.removeAllViews();
+            int selectedSize = getResources().getDimensionPixelSize(R.dimen.dot_selected_size);
+            int unselectedSize = getResources().getDimensionPixelSize(R.dimen.dot_unselected_size);
+            int margin = getResources().getDimensionPixelSize(R.dimen.dot_margin);
+
+            for (int i = 0; i < productImages.size(); i++) {
+                View dot = new View(this);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        unselectedSize,
+                        unselectedSize
+                );
+                params.setMargins(margin, 0, margin, 0);
+                params.gravity = Gravity.CENTER_VERTICAL;
+                dot.setLayoutParams(params);
+                dot.setBackground(getResources().getDrawable(R.drawable.dot_unselected));
+                imagesIndicator.addView(dot);
+            }
+
+            if (!productImages.isEmpty()) {
+                updateImagesIndicator(0);
+            }
+        });
+    }
+
+    private void updateImagesIndicator(int position) {
+        runOnUiThread(() -> {
+            int selectedSize = getResources().getDimensionPixelSize(R.dimen.dot_selected_size);
+            int unselectedSize = getResources().getDimensionPixelSize(R.dimen.dot_unselected_size);
+
+            for (int i = 0; i < imagesIndicator.getChildCount(); i++) {
+                View dot = imagesIndicator.getChildAt(i);
+                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) dot.getLayoutParams();
+
+                if (i == position) {
+                    params.width = selectedSize;
+                    params.height = selectedSize;
+                    dot.setBackground(getResources().getDrawable(R.drawable.dot_selected));
+                } else {
+                    params.width = unselectedSize;
+                    params.height = unselectedSize;
+                    dot.setBackground(getResources().getDrawable(R.drawable.dot_unselected));
+                }
+
+                dot.setLayoutParams(params);
+            }
+        });
     }
 
     private void setupListeners() {
@@ -100,13 +255,18 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             expandedHeight = descriptionContainer.getMeasuredHeight();
             descriptionTextView.setMaxLines(3);
             descriptionTextView.setEllipsize(TextUtils.TruncateAt.END);
-            isInitialized = true;
+            if (collapsedHeight >= expandedHeight) {
+                expandCollapseButton.setVisibility(View.GONE);
+                isInitialized = false;
+            } else {
+                expandCollapseButton.setVisibility(View.VISIBLE);
+                isInitialized = true;
+            }
         });
     }
 
     private void loadSameProducts() {
         if (currentProduct == null) return;
-
         ProductContext.loadProducts(new ProductContext.ProductsCallback() {
             @Override
             public void onSuccess(List<Product> allProducts) {
@@ -124,7 +284,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             @Override
             public void onError(String error) {
                 Log.e("ProductInfo", "Error loading same products: " + error);
-                sameProductsContainer.setVisibility(View.GONE);
+                runOnUiThread(() -> sameProductsContainer.setVisibility(View.GONE));
             }
         });
     }
@@ -150,58 +310,84 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void setupSameProductsRecyclerView(List<Product> sameProducts) {
-        sameProductAdapter = new SameProductAdapter(sameProducts, this);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(
-                this, LinearLayoutManager.HORIZONTAL, false);
-        sameProductsRecyclerView.setLayoutManager(layoutManager);
-        int spacing = getResources().getDimensionPixelSize(R.dimen.same_product_spacing);
-        sameProductsRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
-            @Override
-            public void getItemOffsets(Rect outRect, View view,
-                                       RecyclerView parent, RecyclerView.State state) {
-                outRect.right = spacing;
+        LinearLayoutManager layoutManager = (LinearLayoutManager) sameProductsRecyclerView.getLayoutManager();
+        int firstVisiblePosition = layoutManager != null ?
+                layoutManager.findFirstVisibleItemPosition() : 0;
+        if (sameProductAdapter == null) {
+            sameProductAdapter = new SameProductAdapter(sameProducts, this);
+            sameProductsRecyclerView.setLayoutManager(new LinearLayoutManager(
+                    this, LinearLayoutManager.HORIZONTAL, false));
+            while (sameProductsRecyclerView.getItemDecorationCount() > 0) {
+                sameProductsRecyclerView.removeItemDecorationAt(0);
             }
-        });
-        sameProductsRecyclerView.setClipToPadding(false);
-        sameProductsRecyclerView.setPadding(spacing, 0, spacing, 0);
-        sameProductsRecyclerView.setAdapter(sameProductAdapter);
-        sameProductAdapter.setOnItemClickListener(position -> {
-            Product selectedProduct = sameProducts.get(position);
-            updateProductInfo(selectedProduct);
-            sameProductAdapter.setSelectedPosition(position);
-        });
+            int spacing = getResources().getDimensionPixelSize(R.dimen.same_product_spacing);
+            sameProductsRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+                @Override
+                public void getItemOffsets(Rect outRect, View view,
+                                           RecyclerView parent, RecyclerView.State state) {
+                    int position = parent.getChildAdapterPosition(view);
+                    if (position != parent.getAdapter().getItemCount() - 1) {
+                        outRect.right = spacing;
+                    }
+                    outRect.left = 0;
+                }
+            });
+            sameProductsRecyclerView.setClipToPadding(false);
+            sameProductsRecyclerView.setPadding(0, 0, 0, 0);
+            sameProductsRecyclerView.setAdapter(sameProductAdapter);
+            sameProductAdapter.setOnItemClickListener(position -> {
+                Product selectedProduct = sameProducts.get(position);
+                updateProductInfo(selectedProduct);
+                sameProductAdapter.setSelectedPosition(position);
+            });
+        } else {
+            sameProductAdapter.updateProducts(sameProducts);
+            sameProductsRecyclerView.post(() -> {
+                if (firstVisiblePosition >= 0 && firstVisiblePosition < sameProducts.size()) {
+                    sameProductsRecyclerView.scrollToPosition(firstVisiblePosition);
+                }
+            });
+        }
     }
 
     private void updateProductInfo(Product product) {
-        TextView productNameTextView = findViewById(R.id.productName);
-        TextView priceTextView = findViewById(R.id.productPrice);
-        ImageView productImageView = findViewById(R.id.productImage);
-        productNameTextView.setText(product.getName());
-        priceTextView.setText(String.format("₽ %.2f", product.getPrice()));
-        if (product.getImage() != null && !product.getImage().isEmpty()) {
-            try {
-                String base64Image = product.getImage().split(",")[1];
-                byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                productImageView.setImageBitmap(decodedByte);
-            } catch (Exception e) {
-                productImageView.setImageResource(R.drawable.nike_air_force);
-            }
-        }
+        topProgressBar.setVisibility(View.VISIBLE);
+        topProgressBar.setAlpha(1f);
+        topProgressBar.setProgress(0);
+        updateBasicProductInfo(product);
         currentProduct = product;
-        loadSizesForProduct(product.getId());
-        checkFavoriteStatus();
+        new Thread(() -> {
+            for (int i = 0; i <= 100; i += 20) {
+                try {
+                    Thread.sleep(50);
+                    final int progress = i;
+                    runOnUiThread(() -> updateProgress(progress));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            runOnUiThread(() -> {
+                loadHeavyData();
+                topProgressBar.animate()
+                        .alpha(0f)
+                        .setDuration(300)
+                        .withEndAction(() -> topProgressBar.setVisibility(View.GONE))
+                        .start();
+            });
+        }).start();
     }
 
     private void setupSizesRecyclerView() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(
                 this, LinearLayoutManager.HORIZONTAL, false);
         sizesRecyclerView.setLayoutManager(layoutManager);
+        while (sizesRecyclerView.getItemDecorationCount() > 0) {
+            sizesRecyclerView.removeItemDecorationAt(0);
+        }
         int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.size_item_spacing);
         sizesRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             @Override
-            public void getItemOffsets(Rect outRect, View view,
-                                       RecyclerView parent, RecyclerView.State state) {
+            public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
                 int position = parent.getChildAdapterPosition(view);
                 if (position != parent.getAdapter().getItemCount() - 1) {
                     outRect.right = spacingInPixels;
@@ -280,33 +466,9 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         return 0;
     }
 
-    private void loadProductData() {
-        currentProduct = (Product) getIntent().getSerializableExtra("product");
-        if (currentProduct != null) {
-            Product product = (Product) getIntent().getSerializableExtra("product");
-            if (product != null) {
-                TextView productNameTextView = findViewById(R.id.productName);
-                TextView priceTextView = findViewById(R.id.productPrice);
-                ImageView productImageView = findViewById(R.id.productImage);
-                productNameTextView.setText(product.getName());
-                priceTextView.setText(String.format("₽ %.2f", product.getPrice()));
-                descriptionTextView.setText(product.getDescription());
-                if (product.getImage() != null && !product.getImage().isEmpty()) {
-                    try {
-                        String base64Image = product.getImage().split(",")[1];
-                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        productImageView.setImageBitmap(decodedByte);
-                    } catch (Exception e) {
-                        productImageView.setImageResource(R.drawable.nike_air_force);
-                    }
-                }
-            }
-        }
-    }
-
     private void checkFavoriteStatus() {
         if (currentUserId == null || currentProduct == null) return;
+
         FavoriteContext.checkFavorite(currentUserId, String.valueOf(currentProduct.getId()),
                 new FavoriteContext.FavoriteCallback() {
                     @Override
@@ -329,7 +491,9 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
             return;
         }
+
         if (currentUserId == null || currentProduct == null) return;
+
         FavoriteContext.toggleFavorite(currentUserId, String.valueOf(currentProduct.getId()),
                 isFavorite, new FavoriteContext.FavoriteCallback() {
                     @Override
@@ -361,7 +525,8 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void toggleDescription() {
-        if (!isInitialized) return;
+        if (!isInitialized || expandCollapseButton.getVisibility() != View.VISIBLE) return;
+
         if (isDescriptionExpanded) {
             collapseDescription();
         } else {
@@ -377,15 +542,18 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             params.height = (int) animation.getAnimatedValue();
             descriptionContainer.setLayoutParams(params);
         });
+
         ValueAnimator alphaAnimator = ValueAnimator.ofFloat(0.7f, 1f);
         alphaAnimator.addUpdateListener(animation -> {
             descriptionContainer.setAlpha((float) animation.getAnimatedValue());
         });
+
         heightAnimator.setDuration(400);
         alphaAnimator.setDuration(200);
         heightAnimator.setInterpolator(new DecelerateInterpolator());
         heightAnimator.start();
         alphaAnimator.start();
+
         descriptionTextView.setMaxLines(Integer.MAX_VALUE);
         descriptionTextView.setEllipsize(null);
         isDescriptionExpanded = true;
@@ -399,15 +567,18 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             params.height = (int) animation.getAnimatedValue();
             descriptionContainer.setLayoutParams(params);
         });
+
         ValueAnimator alphaAnimator = ValueAnimator.ofFloat(1f, 0.7f);
         alphaAnimator.addUpdateListener(animation -> {
             descriptionContainer.setAlpha((float) animation.getAnimatedValue());
         });
+
         heightAnimator.setDuration(400);
         alphaAnimator.setDuration(200);
         heightAnimator.setInterpolator(new AccelerateInterpolator());
         heightAnimator.start();
         alphaAnimator.start();
+
         descriptionTextView.setMaxLines(3);
         descriptionTextView.setEllipsize(TextUtils.TruncateAt.END);
         isDescriptionExpanded = false;

@@ -47,13 +47,15 @@ public class SameProductAdapter extends RecyclerView.Adapter<SameProductAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        if (products == null || products.isEmpty()) {
+            return;
+        }
         Product product = products.get(position);
         holder.container.setBackgroundResource(
                 position == selectedPosition ?
                         R.drawable.background_same_sneaker_select :
                         R.drawable.background_same_sneaker
         );
-
         if (product.getImage() != null && !product.getImage().isEmpty()) {
             try {
                 String base64Image = product.getImage().split(",")[1];
@@ -64,12 +66,29 @@ public class SameProductAdapter extends RecyclerView.Adapter<SameProductAdapter.
                 holder.imageSneaker.setImageResource(R.drawable.nike_air_force);
             }
         }
-
         holder.itemView.setOnClickListener(v -> {
             if (itemClickListener != null) {
-                itemClickListener.onItemClick(position);
+                v.animate()
+                        .scaleX(0.95f)
+                        .scaleY(0.95f)
+                        .setDuration(100)
+                        .withEndAction(() -> {
+                            v.animate()
+                                    .scaleX(1f)
+                                    .scaleY(1f)
+                                    .setDuration(100)
+                                    .start();
+                            itemClickListener.onItemClick(position);
+                        })
+                        .start();
             }
         });
+    }
+
+
+    public void updateProducts(List<Product> newProducts) {
+        this.products = newProducts;
+        notifyDataSetChanged();
     }
 
     @Override

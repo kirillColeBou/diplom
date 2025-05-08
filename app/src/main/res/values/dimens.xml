@@ -5,4 +5,7 @@
     <dimen name="favorite_item_spacing">16dp</dimen>
     <dimen name="size_item_spacing">15dp</dimen>
     <dimen name="same_product_spacing">12dp</dimen>
+    <dimen name="dot_selected_size">10dp</dimen>
+    <dimen name="dot_unselected_size">6dp</dimen>
+    <dimen name="dot_margin">4dp</dimen>
 </resources>
