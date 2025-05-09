@@ -23,7 +23,7 @@ public class FavoriteActivity extends AppCompatActivity {
     private FavoriteAdapter adapter;
     private List<Product> favoriteProducts = new ArrayList<>();
     private SwipeRefreshLayout swipeRefreshLayout;
-    private String currentUserId;
+    private long currentUserId;
     private BottomSheetDialog bottomSheetDialog;
     private int currentSelectedPosition = -1;
     private LinearLayout emptyFavoriteLayout;

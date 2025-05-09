@@ -17,7 +17,7 @@ public class SearchResultActivity extends AppCompatActivity
     private RecyclerView productsRecyclerView;
     private ProductAdapter productAdapter;
     private List<Product> productList = new ArrayList<>();
-    private String currentUserId;
+    private long currentUserId;
     private String searchQuery;
 
     @Override

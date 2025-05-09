@@ -60,7 +60,7 @@ public class AuthorizationActivity extends AppCompatActivity {
                     if (userExists) {
                         UserContext.getUserId(loginOrEmailOrPhone, new UserContext.UserIdCallback() {
                             @Override
-                            public void onSuccess(String userId) {
+                            public void onSuccess(long userId) {
                                 AuthUtils.saveUserCredentials(AuthorizationActivity.this,
                                         loginOrEmailOrPhone, hashedPassword, userId);
                                 startActivity(new Intent(AuthorizationActivity.this, MainActivity.class));

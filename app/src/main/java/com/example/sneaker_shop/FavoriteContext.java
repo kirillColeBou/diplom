@@ -23,22 +23,22 @@ public class FavoriteContext {
         void onError(String error);
     }
 
-    public static void checkFavorite(String userId, String productId, FavoriteCallback callback) {
-        if (userId == null || productId == null) {
+    public static void checkFavorite(Long userUid, String productId, FavoriteCallback callback) {
+        if (userUid == -1L || productId == null) {
             callback.onError("User ID or Product ID is null");
             return;
         }
-        new CheckFavoriteTask(userId, productId, callback).execute();
+        new CheckFavoriteTask(userUid, productId, callback).execute();
     }
 
     private static class CheckFavoriteTask extends AsyncTask<Void, Void, Boolean> {
-        private final String userId;
+        private final Long userUid;
         private final String productId;
         private final FavoriteCallback callback;
         private String error;
 
-        CheckFavoriteTask(String userId, String productId, FavoriteCallback callback) {
-            this.userId = userId;
+        CheckFavoriteTask(Long userUid, String productId, FavoriteCallback callback) {
+            this.userUid = userUid;
             this.productId = productId;
             this.callback = callback;
         }
@@ -47,7 +47,7 @@ public class FavoriteContext {
         protected Boolean doInBackground(Void... voids) {
             try {
                 String url = URL + "?and=" +
-                        URLEncoder.encode("(user_id.eq." + userId +
+                        URLEncoder.encode("(user_uid.eq." + userUid +
                                 ",product_id.eq." + productId + ")", "UTF-8");
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", TOKEN)
@@ -72,19 +72,19 @@ public class FavoriteContext {
         }
     }
 
-    public static void toggleFavorite(String userId, String productId, boolean isCurrentlyFavorite, FavoriteCallback callback) {
-        new ToggleFavoriteTask(userId, productId, isCurrentlyFavorite, callback).execute();
+    public static void toggleFavorite(long userUid, String productId, boolean isCurrentlyFavorite, FavoriteCallback callback) {
+        new ToggleFavoriteTask(userUid, productId, isCurrentlyFavorite, callback).execute();
     }
 
     private static class ToggleFavoriteTask extends AsyncTask<Void, Void, Boolean> {
-        private final String userId;
+        private final long userUid;
         private final String productId;
         private final boolean isCurrentlyFavorite;
         private final FavoriteCallback callback;
         private String error;
 
-        ToggleFavoriteTask(String userId, String productId, boolean isCurrentlyFavorite, FavoriteCallback callback) {
-            this.userId = userId;
+        ToggleFavoriteTask(long userUid, String productId, boolean isCurrentlyFavorite, FavoriteCallback callback) {
+            this.userUid = userUid;
             this.productId = productId;
             this.isCurrentlyFavorite = isCurrentlyFavorite;
             this.callback = callback;
@@ -94,22 +94,24 @@ public class FavoriteContext {
         protected Boolean doInBackground(Void... voids) {
             try {
                 if (isCurrentlyFavorite) {
-                    String url = URL + "?user_id=eq." + userId + "&product_id=eq." + productId;
+                    String url = URL + "?user_uid=eq." + userUid + "&product_id=eq." + URLEncoder.encode(productId, "UTF-8");
                     Connection.Response response = Jsoup.connect(url)
                             .header("Authorization", TOKEN)
                             .header("apikey", SECRET)
                             .ignoreContentType(true)
                             .method(Connection.Method.DELETE)
                             .execute();
-                    return !(response.statusCode() == 200 || response.statusCode() == 204);
+                    return response.statusCode() == 204 || response.statusCode() == 200;
                 } else {
-                    String json = String.format("{\"user_id\":\"%s\",\"product_id\":\"%s\"}", userId, productId);
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("user_uid", userUid);
+                    jsonObject.put("product_id", productId);
                     Connection.Response response = Jsoup.connect(URL)
                             .header("Authorization", TOKEN)
                             .header("apikey", SECRET)
                             .header("Content-Type", "application/json")
                             .header("Prefer", "return=minimal")
-                            .requestBody(json)
+                            .requestBody(jsonObject.toString())
                             .ignoreContentType(true)
                             .method(Connection.Method.POST)
                             .execute();
@@ -118,7 +120,7 @@ public class FavoriteContext {
             } catch (Exception e) {
                 error = "Error toggling favorite: " + e.getMessage();
                 Log.e("FavoriteContext", error);
-                return null;
+                return false;
             }
         }
 
@@ -126,10 +128,8 @@ public class FavoriteContext {
         protected void onPostExecute(Boolean success) {
             if (error != null) {
                 callback.onError(error);
-            } else if (success != null) {
-                callback.onSuccess(!isCurrentlyFavorite);
             } else {
-                callback.onError("Unknown error occurred");
+                callback.onSuccess(success ? !isCurrentlyFavorite : isCurrentlyFavorite);
             }
         }
     }
@@ -139,24 +139,24 @@ public class FavoriteContext {
         void onError(String error);
     }
 
-    public static void loadFavorites(String userId, FavoritesCallback callback) {
-        new LoadFavoritesTask(userId, callback).execute();
+    public static void loadFavorites(Long userUid, FavoritesCallback callback) {
+        new LoadFavoritesTask(userUid, callback).execute();
     }
 
     private static class LoadFavoritesTask extends AsyncTask<Void, Void, List<Product>> {
-        private final String userId;
+        private final Long userUid;
         private final FavoritesCallback callback;
         private String error;
 
-        LoadFavoritesTask(String userId, FavoritesCallback callback) {
-            this.userId = userId;
+        LoadFavoritesTask(Long userUid, FavoritesCallback callback) {
+            this.userUid = userUid;
             this.callback = callback;
         }
 
         @Override
         protected List<Product> doInBackground(Void... voids) {
             try {
-                String url = URL + "?select=product:products(*)&user_id=eq." + userId;
+                String url = URL + "?select=product:products(*)&user_uid=eq." + userUid;
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", TOKEN)
                         .header("apikey", SECRET)
@@ -166,7 +166,6 @@ public class FavoriteContext {
                 String response = doc.body().text();
                 JSONArray jsonArray = new JSONArray(response);
                 List<Product> products = new ArrayList<>();
-
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject obj = jsonArray.getJSONObject(i).getJSONObject("product");
                     Product product = new Product(

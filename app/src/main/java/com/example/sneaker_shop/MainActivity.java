@@ -28,7 +28,8 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     private List<Product> productList = new ArrayList<>();
     private SwipeRefreshLayout swipeRefresh;
     private BannerAdView adView;
-    private String currentUserId;
+    private long currentUserId;
+    private Category currentSelectedCategory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
         }
         setContentView(R.layout.main_activity);
         currentUserId = AuthUtils.getCurrentUserId(this);
+        Log.d("main", String.valueOf(currentUserId));
         MobileAds.initialize(this, new InitializationListener() {
             @Override
             public void onInitializationCompleted() {
@@ -52,16 +54,28 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
         adView.setAdSize(BannerAdSize.fixedSize(this, 400, 150));
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
+        initCategories();
         swipeRefresh = findViewById(R.id.swipeRefresh);
         swipeRefresh.setOnRefreshListener(() -> {
-            loadProducts();
+            if (currentSelectedCategory != null) {
+                if (currentSelectedCategory.getId() == -1) {
+                    loadRecommendedProducts();
+                } else if (currentSelectedCategory.getId() == -2) {
+                    loadProducts();
+                } else {
+                    loadProductsForCategory(currentSelectedCategory.getId());
+                }
+            } else {
+                loadProducts();
+            }
         });
         swipeRefresh.setProgressViewOffset(false, 0, 100);
         swipeRefresh.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
-        initCategories();
+        loadCategories();
+        currentSelectedCategory = new Category(-2, "Все модели", true);
         initProducts();
         loadProducts();
     }
@@ -81,20 +95,21 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
             category.setSelected(false);
         }
         categories.get(position).setSelected(true);
+        currentSelectedCategory = categories.get(position);
         categoryAdapter.notifyDataSetChanged();
-        Category selectedCategory = categories.get(position);
-        if (selectedCategory.getId() == -1) {
+        if (currentSelectedCategory.getId() == -1) {
             loadRecommendedProducts();
-        } else if (selectedCategory.getId() == -2) {
+        } else if (currentSelectedCategory.getId() == -2) {
             loadProducts();
         } else {
-            loadProductsForCategory(selectedCategory.getId());
+            loadProductsForCategory(currentSelectedCategory.getId());
         }
     }
 
     private void loadRecommendedProducts() {
         swipeRefresh.setRefreshing(true);
-        ProductContext.loadRecommendedProducts(new ProductContext.ProductsCallback() {
+        long userUid = AuthUtils.getCurrentUserId(this);
+        ProductContext.loadRecommendedProducts(userUid, new ProductContext.ProductsCallback() {
             @Override
             public void onSuccess(List<Product> products) {
                 runOnUiThread(() -> {
@@ -108,10 +123,10 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
             @Override
             public void onError(String error) {
                 runOnUiThread(() -> {
+                    loadProducts();
                     Toast.makeText(MainActivity.this,
-                            "Ошибка загрузки рекомендуемых товаров",
+                            "Рекомендации временно недоступны",
                             Toast.LENGTH_SHORT).show();
-                    swipeRefresh.setRefreshing(false);
                 });
             }
         });

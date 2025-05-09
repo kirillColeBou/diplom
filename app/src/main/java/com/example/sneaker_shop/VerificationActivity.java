@@ -168,11 +168,11 @@ public class VerificationActivity extends AppCompatActivity {
     }
 
     private void registerUser() {
-        new AsyncTask<Void, Void, String>() {
+        new AsyncTask<Void, Void, Long>() {
             private String error;
 
             @Override
-            protected String doInBackground(Void... voids) {
+            protected Long doInBackground(Void... voids) {
                 try {
                     String jsonBody = String.format(
                             "{\"email\":\"%s\",\"phone_number\":\"%s\",\"password\":\"%s\"}",
@@ -186,7 +186,7 @@ public class VerificationActivity extends AppCompatActivity {
                             .requestBody(jsonBody)
                             .ignoreContentType(true)
                             .post();
-                    String getUserUrl = RegisterContext.URL + "?email=eq." + email + "&select=id";
+                    String getUserUrl = RegisterContext.URL + "?email=eq." + email + "&select=user_uid";
                     Document userDoc = Jsoup.connect(getUserUrl)
                             .header("Authorization", RegisterContext.TOKEN)
                             .header("apikey", RegisterContext.SECRET)
@@ -194,20 +194,20 @@ public class VerificationActivity extends AppCompatActivity {
                             .get();
                     JSONArray jsonArray = new JSONArray(userDoc.body().text());
                     if (jsonArray.length() > 0) {
-                        return jsonArray.getJSONObject(0).getString("id");
+                        return jsonArray.getJSONObject(0).getLong("user_uid");
                     }
-                    return null;
+                    return -1L;
                 } catch (Exception e) {
                     error = e.getMessage();
-                    return null;
+                    return -1L;
                 }
             }
 
             @Override
-            protected void onPostExecute(String userId) {
-                if (userId != null) {
+            protected void onPostExecute(Long userUid) {
+                if (userUid != -1L) {
                     AuthUtils.saveUserCredentials(VerificationActivity.this,
-                            email, md5(password), userId);
+                            email, md5(password), userUid);
                     proceedToOnboarding();
                 } else {
                     showRegistrationError(error != null ? error : "Не удалось получить ID пользователя");

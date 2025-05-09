@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -15,6 +16,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import org.apmem.tools.layouts.FlowLayout;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,9 +32,10 @@ public class SearchActivity extends AppCompatActivity {
     private EditText searchEditText;
     private boolean isEditMode = false;
     private Set<String> searchHistory = new HashSet<>();
-    private String currentUserId;
+    private long currentUserId;
     private boolean showFullHistory = false;
     private View moreButtonView;
+    private boolean isHistoryBeingProcessed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,7 +97,11 @@ public class SearchActivity extends AppCompatActivity {
     private void performSearch() {
         String query = searchEditText.getText().toString().trim();
         if (!query.isEmpty() && !isFinishing()) {
-            addToSearchHistory(query);
+            if (!isHistoryBeingProcessed) {
+                isHistoryBeingProcessed = true;
+                addToSearchHistory(query);
+                isHistoryBeingProcessed = false;
+            }
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
             Intent intent = new Intent(this, SearchResultActivity.class);
@@ -102,10 +111,43 @@ public class SearchActivity extends AppCompatActivity {
         }
     }
 
+    private void performSearchWithQuery(String query) {
+        if (!query.isEmpty() && !isFinishing()) {
+            if (!isHistoryBeingProcessed) {
+                isHistoryBeingProcessed = true;
+                addToSearchHistory(query);
+                isHistoryBeingProcessed = false;
+            }
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+            Intent intent = new Intent(this, SearchResultActivity.class);
+            intent.putExtra("search_query", query);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        }
+    }
+
+    private void addToSearchHistory(String query) {
+        searchHistory.remove(query);
+        searchHistory.add(query);
+        if (searchHistory.size() > FULL_HISTORY_LIMIT) {
+            List<String> tempList = new ArrayList<>(searchHistory);
+            searchHistory.remove(tempList.get(tempList.size() - 1));
+        }
+        updateSearchHistoryUI();
+        saveSearchHistory();
+        saveSearchToSupabase(query);
+    }
+
+    private void saveSearchToSupabase(String query) {
+        SearchContext.saveSearchQuery(currentUserId, query);
+    }
+
     private void loadSearchHistory() {
         Set<String> defaultSet = new HashSet<>();
         Set<String> savedHistory = getSharedPreferences("SearchHistory", MODE_PRIVATE)
-                .getStringSet(currentUserId, defaultSet);
+                .getStringSet(String.valueOf(currentUserId), defaultSet);
         if (savedHistory != null) {
             searchHistory = new HashSet<>(savedHistory);
         }
@@ -114,7 +156,7 @@ public class SearchActivity extends AppCompatActivity {
     private void saveSearchHistory() {
         getSharedPreferences("SearchHistory", MODE_PRIVATE)
                 .edit()
-                .putStringSet(currentUserId, searchHistory)
+                .putStringSet(String.valueOf(currentUserId), searchHistory)
                 .apply();
     }
 
@@ -140,19 +182,6 @@ public class SearchActivity extends AppCompatActivity {
         deleteSearchItem.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
         historyItemView.setTag(query);
         searchHistoryContainer.addView(historyItemView);
-    }
-
-    private void performSearchWithQuery(String query) {
-        if (!query.isEmpty() && !isFinishing()) {
-            addToSearchHistory(query);
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
-            Intent intent = new Intent(this, SearchResultActivity.class);
-            intent.putExtra("search_query", query);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-        }
     }
 
     public void onBack(View view) {
@@ -206,21 +235,6 @@ public class SearchActivity extends AppCompatActivity {
             updateSearchHistoryUI();
         });
         searchHistoryContainer.addView(moreButtonView);
-    }
-
-    private void addToSearchHistory(String query) {
-        if (moreButtonView != null) {
-            searchHistoryContainer.removeView(moreButtonView);
-            moreButtonView = null;
-        }
-        if (searchHistory.size() >= FULL_HISTORY_LIMIT) {
-            String oldest = new ArrayList<>(searchHistory).get(0);
-            searchHistory.remove(oldest);
-        }
-        searchHistory.remove(query);
-        searchHistory.add(query);
-        updateSearchHistoryUI();
-        saveSearchHistory();
     }
 
     public void onDeleteSearchText(View view) {

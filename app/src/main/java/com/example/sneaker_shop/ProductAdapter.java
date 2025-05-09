@@ -21,14 +21,14 @@ import java.util.Locale;
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
     private List<Product> productList;
     private Context context;
-    private String currentUserId;
+    private long currentUserId;
     private OnFavoriteClickListener favoriteClickListener;
 
     public interface OnFavoriteClickListener {
         void onFavoriteClick(int position, boolean isFavorite);
     }
 
-    public ProductAdapter(Context context, List<Product> productList, String currentUserId, OnFavoriteClickListener listener) {
+    public ProductAdapter(Context context, List<Product> productList, long currentUserId, OnFavoriteClickListener listener) {
         this.context = context;
         this.productList = productList;
         this.currentUserId = currentUserId;

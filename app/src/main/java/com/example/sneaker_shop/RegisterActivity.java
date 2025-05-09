@@ -25,7 +25,6 @@ public class RegisterActivity extends AppCompatActivity {
         String email = emails.getText().toString().trim();
         String phone_number = phone_numbers.getText().toString().trim();
         String password = passwords.getText().toString().trim();
-
         if (validateInputs(email, phone_number, password)) {
             checkUserAndProceed(email, phone_number, password);
         }

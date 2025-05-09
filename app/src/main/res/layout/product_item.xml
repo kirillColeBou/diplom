@@ -50,7 +50,7 @@
                     android:layout_margin="5dp"/>
 
             </LinearLayout>
-            
+
             <ImageView
                 android:id="@+id/iamge_product"
                 android:layout_width="160dp"

@@ -18,7 +18,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MenuActivity extends AppCompatActivity {
     private CircleImageView personImageView;
     private TextView loginTextView;
-    private String currentUserId;
+    private long currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,8 +27,8 @@ public class MenuActivity extends AppCompatActivity {
         personImageView = findViewById(R.id.person_image);
         loginTextView = findViewById(R.id.login);
         currentUserId = AuthUtils.getCurrentUserId(this);
-        if (currentUserId != null && !currentUserId.isEmpty()) {
-            loadUserData(currentUserId);
+        if (currentUserId != -1L) {
+            loadUserData(String.valueOf(currentUserId));
         } else {
             setDefaultData();
         }

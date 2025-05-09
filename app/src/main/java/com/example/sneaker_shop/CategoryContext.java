@@ -36,8 +36,8 @@ public class CategoryContext {
         @Override
         protected List<Category> doInBackground(Void... voids) {
             List<Category> categories = new ArrayList<>();
-            categories.add(new Category(-1, "Для вас", true));
-            categories.add(new Category(-2, "Все модели", false));
+            categories.add(new Category(-1, "Для вас", false));
+            categories.add(new Category(-2, "Все модели", true));
             try {
                 Document doc = Jsoup.connect(URL)
                         .header("Authorization", TOKEN)

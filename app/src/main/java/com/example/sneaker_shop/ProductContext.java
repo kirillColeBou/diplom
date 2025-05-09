@@ -129,46 +129,53 @@ public class ProductContext {
         }
     }
 
-    public static void loadRecommendedProducts(ProductsCallback callback) {
-        new LoadRecommendedProductsTask(callback).execute();
+    public static void loadRecommendedProducts(long userUid, ProductsCallback callback) {
+        new LoadRecommendedProductsTask(userUid, callback).execute();
     }
 
     private static class LoadRecommendedProductsTask extends AsyncTask<Void, Void, List<Product>> {
+        private final long userUid;
         private final ProductsCallback callback;
         private String error;
 
-        LoadRecommendedProductsTask(ProductsCallback callback) {
+        LoadRecommendedProductsTask(long userUid, ProductsCallback callback) {
+            this.userUid = userUid;
             this.callback = callback;
         }
 
         @Override
         protected List<Product> doInBackground(Void... voids) {
-            List<Product> products = new ArrayList<>();
             try {
-                String url = URL + "?limit=8";
+                String url = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/rpc/get_recommended_products";
+                JSONObject params = new JSONObject();
+                params.put("input_user_uid", userUid);
+                Log.d("API_CALL", "Calling: " + url);
+                Log.d("API_CALL", "With params: " + params.toString());
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", TOKEN)
                         .header("apikey", SECRET)
+                        .header("Content-Type", "application/json")
+                        .requestBody(params.toString())
                         .ignoreContentType(true)
-                        .get();
+                        .post();
                 String response = doc.body().text();
+                Log.d("API_RESPONSE", "Received: " + response);
                 JSONArray jsonArray = new JSONArray(response);
+                List<Product> products = new ArrayList<>();
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject obj = jsonArray.getJSONObject(i);
-                    Product product = new Product(
+                    products.add(new Product(
                             obj.getInt("id"),
                             obj.getString("name"),
                             obj.getDouble("price"),
                             obj.getString("image"),
                             obj.getString("description"),
                             obj.getInt("category_id")
-                    );
-                    products.add(product);
+                    ));
                 }
                 return products;
             } catch (Exception e) {
-                error = "Error: " + e.getMessage();
-                Log.e("Supabase", "Failed to load recommended products: " + error);
+                Log.e("API_ERROR", "Error fetching recommendations", e);
                 return null;
             }
         }

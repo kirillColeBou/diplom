@@ -52,6 +52,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
         holder.nameProduct.setText(product.getName());
         holder.priceProduct.setText(String.format("%d ₽", (int) product.getPrice()));
 
+        // Загрузка изображения
         if (product.getImage() != null && !product.getImage().isEmpty()) {
             try {
                 String base64Image = product.getImage().split(",")[1];
@@ -62,13 +63,17 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
                 holder.imageProduct.setImageResource(R.drawable.nike_air_force);
             }
         }
+
         holder.favoriteIcon.setVisibility(View.GONE);
         holder.moreFavorite.setVisibility(View.VISIBLE);
+
+        // Обработчик клика на весь элемент
         holder.itemView.setOnClickListener(v -> {
             if (itemClickListener != null) {
                 itemClickListener.onItemClick(product);
             }
         });
+
         holder.moreFavorite.setOnClickListener(v -> {
             if (moreClickListener != null) {
                 moreClickListener.onMoreClick(holder.getAdapterPosition());

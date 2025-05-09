@@ -54,7 +54,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     private List<String> productImages = new ArrayList<>();
     private boolean isDescriptionExpanded = false;
     private boolean isFavorite = false;
-    private String currentUserId;
+    private long currentUserId;
     private Product currentProduct;
     private int collapsedHeight;
     private int expandedHeight;
@@ -467,7 +467,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void checkFavoriteStatus() {
-        if (currentUserId == null || currentProduct == null) return;
+        if (currentUserId == -1 || currentProduct == null) return;
 
         FavoriteContext.checkFavorite(currentUserId, String.valueOf(currentProduct.getId()),
                 new FavoriteContext.FavoriteCallback() {
@@ -492,7 +492,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             return;
         }
 
-        if (currentUserId == null || currentProduct == null) return;
+        if (currentUserId == -1 || currentProduct == null) return;
 
         FavoriteContext.toggleFavorite(currentUserId, String.valueOf(currentProduct.getId()),
                 isFavorite, new FavoriteContext.FavoriteCallback() {

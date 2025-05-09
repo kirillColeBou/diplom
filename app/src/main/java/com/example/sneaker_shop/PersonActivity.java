@@ -44,7 +44,7 @@ public class PersonActivity extends AppCompatActivity {
     private View saveButton;
     private TextView profileTitle, editPhoto;
     private CircleImageView profileImageView;
-    private String currentUserId;
+    private long currentUserId;
     private boolean isEditMode = false;
     private String currentImageBase64;
 
@@ -62,7 +62,7 @@ public class PersonActivity extends AppCompatActivity {
         editPhoto = findViewById(R.id.editPhoto);
         profileImageView = findViewById(R.id.profile_image);
         currentUserId = AuthUtils.getCurrentUserId(this);
-        if (currentUserId != null && !currentUserId.isEmpty()) {
+        if (currentUserId != -1L) {
             loadUserData(currentUserId);
         } else {
             Toast.makeText(this, "Пользователь не авторизован", Toast.LENGTH_SHORT).show();
@@ -70,22 +70,22 @@ public class PersonActivity extends AppCompatActivity {
         }
     }
 
-    private void loadUserData(String userId) {
+    private void loadUserData(Long userId) {
         new LoadUserDataTask(userId).execute();
     }
 
     private class LoadUserDataTask extends AsyncTask<Void, Void, JSONArray> {
-        private final String userId;
+        private final Long userId;
         private String error;
 
-        LoadUserDataTask(String userId) {
+        LoadUserDataTask(Long userId) {
             this.userId = userId;
         }
 
         @Override
         protected JSONArray doInBackground(Void... voids) {
             try {
-                String url = UserContext.URL + "?id=eq." + URLEncoder.encode(userId, "UTF-8");
+                String url = UserContext.URL + "?user_uid=eq." + userId;
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", UserContext.TOKEN)
                         .header("apikey", UserContext.SECRET)
@@ -165,7 +165,7 @@ public class PersonActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... voids) {
             try {
-                String url = UserContext.URL + "?id=eq." + URLEncoder.encode(currentUserId, "UTF-8");
+                String url = UserContext.URL + "?user_uid=eq." + currentUserId;
                 String data = String.format(
                         "{\"login\":\"%s\",\"email\":\"%s\",\"phone_number\":\"%s\",\"address\":\"%s\"}",
                         loginEditText.getText().toString(),
@@ -242,19 +242,16 @@ public class PersonActivity extends AppCompatActivity {
         }
     }
 
-    // Замените метод onActivityResult на этот:
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK) {
             return;
         }
-
         try {
             Bitmap bitmap = null;
             if (requestCode == PICK_IMAGE_REQUEST) {
                 if (data != null && data.getData() != null) {
-                    // Из галереи
                     Uri selectedImageUri = data.getData();
                     InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
                     bitmap = BitmapFactory.decodeStream(inputStream);
@@ -262,7 +259,6 @@ public class PersonActivity extends AppCompatActivity {
                         inputStream.close();
                     }
                 } else if (data != null && data.getExtras() != null) {
-                    // Из камеры (так как chooser может вернуть камеру с тем же requestCode)
                     bitmap = (Bitmap) data.getExtras().get("data");
                 }
             }
@@ -295,11 +291,9 @@ public class PersonActivity extends AppCompatActivity {
             @Override
             protected Boolean doInBackground(Void... voids) {
                 try {
-                    String url = UserContext.URL + "?id=eq." + URLEncoder.encode(currentUserId, "UTF-8");
+                    String url = UserContext.URL + "?user_uid=eq." + currentUserId;
                     String data = String.format("{\"image\":\"%s\"}", cleanedBase64);
-
-                    Log.d("SaveImage", "Sending data: " + data); // Для отладки
-
+                    Log.d("SaveImage", "Sending data: " + data);
                     org.jsoup.Connection.Response response = Jsoup.connect(url)
                             .header("Authorization", UserContext.TOKEN)
                             .header("apikey", UserContext.SECRET)
@@ -309,7 +303,6 @@ public class PersonActivity extends AppCompatActivity {
                             .method(org.jsoup.Connection.Method.PATCH)
                             .ignoreContentType(true)
                             .execute();
-
                     Log.d("SaveImage", "Response: " + response.statusCode());
                     return response.statusCode() == 204 || response.statusCode() == 200;
                 } catch (Exception e) {
@@ -354,9 +347,8 @@ public class PersonActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... voids) {
             try {
-                String url = UserContext.URL + "?id=eq." + URLEncoder.encode(currentUserId, "UTF-8");
+                String url = UserContext.URL + "?user_uid=eq." + currentUserId;
                 String data = String.format("{\"image\":\"%s\"}", currentImageBase64);
-
                 org.jsoup.Connection.Response response = Jsoup.connect(url)
                         .header("Authorization", UserContext.TOKEN)
                         .header("apikey", UserContext.SECRET)

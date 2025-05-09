@@ -74,11 +74,11 @@ public class UserContext {
     }
 
     public interface UserIdCallback {
-        void onSuccess(String userId);
+        void onSuccess(long userUid);
         void onError(String error);
     }
 
-    private static class GetUserIdTask extends AsyncTask<Void, Void, String> {
+    private static class GetUserIdTask extends AsyncTask<Void, Void, Long> {
         private final String loginOrEmailOrPhone;
         private final UserIdCallback callback;
         private String error;
@@ -89,13 +89,13 @@ public class UserContext {
         }
 
         @Override
-        protected String doInBackground(Void... voids) {
+        protected Long doInBackground(Void... voids) {
             try {
                 String url = URL + "?or=" +
                         URLEncoder.encode("(login.eq." + loginOrEmailOrPhone +
                                 ",email.eq." + loginOrEmailOrPhone +
                                 ",phone_number.eq." + loginOrEmailOrPhone + ")") +
-                        "&select=id";
+                        "&select=user_uid";
 
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", TOKEN)
@@ -105,21 +105,21 @@ public class UserContext {
 
                 JSONArray jsonArray = new JSONArray(doc.body().text());
                 if (jsonArray.length() > 0) {
-                    return jsonArray.getJSONObject(0).getString("id");
+                    return jsonArray.getJSONObject(0).getLong("user_uid");
                 }
-                return null;
+                return -1L;
             } catch (Exception e) {
                 error = "Error: " + e.getMessage();
-                return null;
+                return -1L;
             }
         }
 
         @Override
-        protected void onPostExecute(String userId) {
+        protected void onPostExecute(Long userUid) {
             if (error != null) {
                 callback.onError(error);
-            } else if (userId != null) {
-                callback.onSuccess(userId);
+            } else if (userUid != -1L) {
+                callback.onSuccess(userUid);
             } else {
                 callback.onError("User not found");
             }
