@@ -67,7 +67,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         initViews();
         setupProgressBar();
         currentUserId = AuthUtils.getCurrentUserId(this);
-        currentProduct = (Product) getIntent().getSerializableExtra("product");
+        currentProduct = (Product)getIntent().getSerializableExtra("product");
         if (currentProduct != null) {
             loadInitialData();
         }
@@ -193,7 +193,6 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             int selectedSize = getResources().getDimensionPixelSize(R.dimen.dot_selected_size);
             int unselectedSize = getResources().getDimensionPixelSize(R.dimen.dot_unselected_size);
             int margin = getResources().getDimensionPixelSize(R.dimen.dot_margin);
-
             for (int i = 0; i < productImages.size(); i++) {
                 View dot = new View(this);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -206,7 +205,6 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                 dot.setBackground(getResources().getDrawable(R.drawable.dot_unselected));
                 imagesIndicator.addView(dot);
             }
-
             if (!productImages.isEmpty()) {
                 updateImagesIndicator(0);
             }
@@ -217,11 +215,9 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         runOnUiThread(() -> {
             int selectedSize = getResources().getDimensionPixelSize(R.dimen.dot_selected_size);
             int unselectedSize = getResources().getDimensionPixelSize(R.dimen.dot_unselected_size);
-
             for (int i = 0; i < imagesIndicator.getChildCount(); i++) {
                 View dot = imagesIndicator.getChildAt(i);
                 LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) dot.getLayoutParams();
-
                 if (i == position) {
                     params.width = selectedSize;
                     params.height = selectedSize;
@@ -231,7 +227,6 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                     params.height = unselectedSize;
                     dot.setBackground(getResources().getDrawable(R.drawable.dot_unselected));
                 }
-
                 dot.setLayoutParams(params);
             }
         });
@@ -491,9 +486,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
             return;
         }
-
         if (currentUserId == -1 || currentProduct == null) return;
-
         FavoriteContext.toggleFavorite(currentUserId, String.valueOf(currentProduct.getId()),
                 isFavorite, new FavoriteContext.FavoriteCallback() {
                     @Override
@@ -526,7 +519,6 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
 
     private void toggleDescription() {
         if (!isInitialized || expandCollapseButton.getVisibility() != View.VISIBLE) return;
-
         if (isDescriptionExpanded) {
             collapseDescription();
         } else {
@@ -542,12 +534,10 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             params.height = (int) animation.getAnimatedValue();
             descriptionContainer.setLayoutParams(params);
         });
-
         ValueAnimator alphaAnimator = ValueAnimator.ofFloat(0.7f, 1f);
         alphaAnimator.addUpdateListener(animation -> {
             descriptionContainer.setAlpha((float) animation.getAnimatedValue());
         });
-
         heightAnimator.setDuration(400);
         alphaAnimator.setDuration(200);
         heightAnimator.setInterpolator(new DecelerateInterpolator());
@@ -567,12 +557,10 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             params.height = (int) animation.getAnimatedValue();
             descriptionContainer.setLayoutParams(params);
         });
-
         ValueAnimator alphaAnimator = ValueAnimator.ofFloat(1f, 0.7f);
         alphaAnimator.addUpdateListener(animation -> {
             descriptionContainer.setAlpha((float) animation.getAnimatedValue());
         });
-
         heightAnimator.setDuration(400);
         alphaAnimator.setDuration(200);
         heightAnimator.setInterpolator(new AccelerateInterpolator());

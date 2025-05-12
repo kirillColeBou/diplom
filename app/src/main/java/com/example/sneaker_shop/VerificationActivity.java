@@ -1,5 +1,6 @@
 package com.example.sneaker_shop;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -167,6 +168,7 @@ public class VerificationActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void registerUser() {
         new AsyncTask<Void, Void, Long>() {
             private String error;

@@ -249,7 +249,7 @@
                     android:layout_marginLeft="20dp"
                     android:layout_marginTop="10dp"
                     android:layout_marginBottom="10dp"
-                    android:onClick="onPerson">
+                    android:onClick="onDelete">
 
                     <ImageView
                         android:layout_width="28dp"

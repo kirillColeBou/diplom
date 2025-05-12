@@ -147,8 +147,6 @@ public class ProductContext {
                 String url = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/rpc/get_recommended_products";
                 JSONObject params = new JSONObject();
                 params.put("input_user_uid", userUid);
-                Log.d("API_CALL", "Calling: " + url);
-                Log.d("API_CALL", "With params: " + params.toString());
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", TOKEN)
                         .header("apikey", SECRET)

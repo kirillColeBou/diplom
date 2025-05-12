@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -96,13 +97,11 @@ public class UserContext {
                                 ",email.eq." + loginOrEmailOrPhone +
                                 ",phone_number.eq." + loginOrEmailOrPhone + ")") +
                         "&select=user_uid";
-
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", TOKEN)
                         .header("apikey", SECRET)
                         .ignoreContentType(true)
                         .get();
-
                 JSONArray jsonArray = new JSONArray(doc.body().text());
                 if (jsonArray.length() > 0) {
                     return jsonArray.getJSONObject(0).getLong("user_uid");
@@ -122,6 +121,54 @@ public class UserContext {
                 callback.onSuccess(userUid);
             } else {
                 callback.onError("User not found");
+            }
+        }
+    }
+
+    public interface DeleteUserCallback {
+        void onSuccess();
+        void onError(String error);
+    }
+
+    public static void deleteUser(long userId, DeleteUserCallback callback) {
+        new DeleteUserTask(userId, callback).execute();
+    }
+
+    private static class DeleteUserTask extends AsyncTask<Void, Void, Boolean> {
+        private final long userId;
+        private final DeleteUserCallback callback;
+        private String errorMessage;
+
+        DeleteUserTask(long userId, DeleteUserCallback callback) {
+            this.userId = userId;
+            this.callback = callback;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            try {
+                String url = URL + "?user_uid=eq." + userId;
+                Connection.Response response = Jsoup.connect(url)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .header("Prefer", "return=minimal")
+                        .method(Connection.Method.DELETE)
+                        .ignoreContentType(true)
+                        .execute();
+                return response.statusCode() == 204 || response.statusCode() == 200;
+            } catch (Exception e) {
+                errorMessage = e.getMessage();
+                Log.e("DeleteUser", "Error deleting user: " + errorMessage);
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (success) {
+                callback.onSuccess();
+            } else {
+                callback.onError(errorMessage != null ? errorMessage : "Unknown error");
             }
         }
     }

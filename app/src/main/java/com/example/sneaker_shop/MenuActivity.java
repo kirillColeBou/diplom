@@ -6,10 +6,20 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONArray;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import java.net.URLEncoder;
@@ -108,5 +118,58 @@ public class MenuActivity extends AppCompatActivity {
         startActivity(intent);
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
         finish();
+    }
+
+    public void onDelete(View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.RoundedDialog);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.alert_dialog, null);
+        builder.setView(dialogView);
+        TextView title = dialogView.findViewById(R.id.title);
+        TextView message = dialogView.findViewById(R.id.message);
+        Button negativeButton = dialogView.findViewById(R.id.negative_button);
+        Button positiveButton = dialogView.findViewById(R.id.positive_button);
+        title.setText("Подтверждение удаления");
+        message.setText("Вы уверены, что хотите удалить всю информацию о своем аккаунте?");
+        AlertDialog dialog = builder.create();
+        negativeButton.setOnClickListener(v -> dialog.dismiss());
+        positiveButton.setOnClickListener(v -> {
+            dialog.dismiss();
+            deleteUserAccount();
+        });
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
+            layoutParams.copyFrom(window.getAttributes());
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            window.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            int screenWidth = displayMetrics.widthPixels;
+            int horizontalMargin = (int) (20 * displayMetrics.density);
+            layoutParams.width = screenWidth - 2 * horizontalMargin;
+            layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            window.setAttributes(layoutParams);
+            window.setBackgroundDrawableResource(R.drawable.background_alert_dialog);
+        }
+    }
+
+    private void deleteUserAccount() {
+        UserContext.deleteUser(currentUserId, new UserContext.DeleteUserCallback() {
+            @Override
+            public void onSuccess() {
+                AuthUtils.logout(MenuActivity.this);
+                Intent intent = new Intent(MenuActivity.this, AuthorizationActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+                Toast.makeText(MenuActivity.this, "Аккаунт успешно удален", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(MenuActivity.this,
+                        "Ошибка при удалении аккаунта: " + error,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
