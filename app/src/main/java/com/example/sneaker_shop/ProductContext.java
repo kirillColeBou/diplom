@@ -49,7 +49,6 @@ public class ProductContext {
                             obj.getInt("id"),
                             obj.getString("name"),
                             obj.getDouble("price"),
-                            obj.getString("image"),
                             obj.getString("description"),
                             obj.getInt("category_id")
                     );
@@ -105,7 +104,6 @@ public class ProductContext {
                             obj.getInt("id"),
                             obj.getString("name"),
                             obj.getDouble("price"),
-                            obj.getString("image"),
                             obj.getString("description"),
                             obj.getInt("category_id")
                     );
@@ -168,7 +166,6 @@ public class ProductContext {
                             obj.getInt("id"),
                             obj.getString("name"),
                             obj.getDouble("price"),
-                            obj.getString("image"),
                             obj.getString("description"),
                             obj.getInt("category_id")
                     ));

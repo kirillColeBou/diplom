@@ -47,17 +47,30 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         Product product = productList.get(position);
         holder.nameProduct.setText(product.getName());
         holder.priceProduct.setText(String.format(Locale.getDefault(), "%.2f ₽", product.getPrice()));
-        if (product.getImage() != null && !product.getImage().isEmpty()) {
-            try {
-                String base64Image = product.getImage().split(",")[1];
-                byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                holder.imageProduct.setImageBitmap(decodedByte);
-            } catch (Exception e) {
-                Log.e("ProductAdapter", "Error loading image", e);
+        ImageContext.loadImagesForProduct(product.getId(), new ImageContext.ImagesCallback() {
+            @Override
+            public void onSuccess(List<String> images) {
+                if (images != null && !images.isEmpty()) {
+                    try {
+                        String base64Image = images.get(0).split(",")[1];
+                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        holder.imageProduct.setImageBitmap(decodedByte);
+                    } catch (Exception e) {
+                        Log.e("ProductAdapter", "Error loading image", e);
+                        holder.imageProduct.setImageResource(R.drawable.nike_air_force);
+                    }
+                } else {
+                    holder.imageProduct.setImageResource(R.drawable.nike_air_force);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("ProductAdapter", "Error loading images: " + error);
                 holder.imageProduct.setImageResource(R.drawable.nike_air_force);
             }
-        }
+        });
         FavoriteContext.checkFavorite(currentUserId, String.valueOf(product.getId()), new FavoriteContext.FavoriteCallback() {
             @Override
             public void onSuccess(boolean isFavorite) {
@@ -93,7 +106,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                                 holder.favoriteIcon.setImageResource(confirmedNewState ?
                                         R.drawable.favorite_item_select : R.drawable.favorite_item);
                                 holder.favoriteIcon.setTag(confirmedNewState);
-
                                 if (favoriteClickListener != null) {
                                     favoriteClickListener.onFavoriteClick(updatedPosition, confirmedNewState);
                                 }

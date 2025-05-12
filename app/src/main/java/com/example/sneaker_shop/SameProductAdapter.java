@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,16 +57,30 @@ public class SameProductAdapter extends RecyclerView.Adapter<SameProductAdapter.
                         R.drawable.background_same_sneaker_select :
                         R.drawable.background_same_sneaker
         );
-        if (product.getImage() != null && !product.getImage().isEmpty()) {
-            try {
-                String base64Image = product.getImage().split(",")[1];
-                byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                holder.imageSneaker.setImageBitmap(decodedByte);
-            } catch (Exception e) {
+        ImageContext.loadImagesForProduct(product.getId(), new ImageContext.ImagesCallback() {
+            @Override
+            public void onSuccess(List<String> images) {
+                if (images != null && !images.isEmpty()) {
+                    try {
+                        String base64Image = images.get(0).split(",")[1];
+                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        holder.imageSneaker.setImageBitmap(decodedByte);
+                    } catch (Exception e) {
+                        Log.e("ProductAdapter", "Error loading image", e);
+                        holder.imageSneaker.setImageResource(R.drawable.nike_air_force);
+                    }
+                } else {
+                    holder.imageSneaker.setImageResource(R.drawable.nike_air_force);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("ProductAdapter", "Error loading images: " + error);
                 holder.imageSneaker.setImageResource(R.drawable.nike_air_force);
             }
-        }
+        });
         holder.itemView.setOnClickListener(v -> {
             if (itemClickListener != null) {
                 v.animate()

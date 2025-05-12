@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,29 +52,37 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
         Product product = favoriteProducts.get(position);
         holder.nameProduct.setText(product.getName());
         holder.priceProduct.setText(String.format("%d ₽", (int) product.getPrice()));
+        ImageContext.loadImagesForProduct(product.getId(), new ImageContext.ImagesCallback() {
+            @Override
+            public void onSuccess(List<String> images) {
+                if (images != null && !images.isEmpty()) {
+                    try {
+                        String base64Image = images.get(0).split(",")[1];
+                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        holder.imageProduct.setImageBitmap(decodedByte);
+                    } catch (Exception e) {
+                        Log.e("ProductAdapter", "Error loading image", e);
+                        holder.imageProduct.setImageResource(R.drawable.nike_air_force);
+                    }
+                } else {
+                    holder.imageProduct.setImageResource(R.drawable.nike_air_force);
+                }
+            }
 
-        // Загрузка изображения
-        if (product.getImage() != null && !product.getImage().isEmpty()) {
-            try {
-                String base64Image = product.getImage().split(",")[1];
-                byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                holder.imageProduct.setImageBitmap(decodedByte);
-            } catch (Exception e) {
+            @Override
+            public void onError(String error) {
+                Log.e("ProductAdapter", "Error loading images: " + error);
                 holder.imageProduct.setImageResource(R.drawable.nike_air_force);
             }
-        }
-
+        });
         holder.favoriteIcon.setVisibility(View.GONE);
         holder.moreFavorite.setVisibility(View.VISIBLE);
-
-        // Обработчик клика на весь элемент
         holder.itemView.setOnClickListener(v -> {
             if (itemClickListener != null) {
                 itemClickListener.onItemClick(product);
             }
         });
-
         holder.moreFavorite.setOnClickListener(v -> {
             if (moreClickListener != null) {
                 moreClickListener.onMoreClick(holder.getAdapterPosition());
