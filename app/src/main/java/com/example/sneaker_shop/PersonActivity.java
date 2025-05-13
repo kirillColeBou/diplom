@@ -1,6 +1,7 @@
 package com.example.sneaker_shop;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -37,9 +38,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class PersonActivity extends AppCompatActivity {
 
     private static final int PICK_IMAGE_REQUEST = 1;
-    private static final int CAMERA_REQUEST = 2;
     private static final int PERMISSION_REQUEST_CODE = 100;
-    private EditText loginEditText, emailEditText, phoneEditText, addressEditText;
+    private EditText loginEditText, emailEditText, phoneEditText;
     private LinearLayout editButton;
     private View saveButton;
     private TextView profileTitle, editPhoto;
@@ -55,7 +55,6 @@ public class PersonActivity extends AppCompatActivity {
         loginEditText = findViewById(R.id.login);
         emailEditText = findViewById(R.id.email);
         phoneEditText = findViewById(R.id.phone_number);
-        addressEditText = findViewById(R.id.address);
         editButton = findViewById(R.id.editButton);
         saveButton = findViewById(R.id.saveButton);
         profileTitle = findViewById(R.id.profileTitle);
@@ -105,7 +104,6 @@ public class PersonActivity extends AppCompatActivity {
                     String login = result.getJSONObject(0).isNull("login") ? "" : result.getJSONObject(0).optString("login", "");
                     String email = result.getJSONObject(0).isNull("email") ? "" : result.getJSONObject(0).optString("email", "");
                     String phone = result.getJSONObject(0).isNull("phone_number") ? "" : result.getJSONObject(0).optString("phone_number", "");
-                    String address = result.getJSONObject(0).isNull("address") ? "" : result.getJSONObject(0).optString("address", "");
                     String imageBase64 = result.getJSONObject(0).isNull("image") ? null :
                             result.getJSONObject(0).optString("image", null);
                     if (imageBase64 != null && !imageBase64.isEmpty()) {
@@ -116,7 +114,6 @@ public class PersonActivity extends AppCompatActivity {
                     setFieldWithHint(loginEditText, login, "Введите логин");
                     setFieldWithHint(emailEditText, email, "Введите email");
                     setFieldWithHint(phoneEditText, phone, "Введите телефон");
-                    setFieldWithHint(addressEditText, address, "Введите адрес");
                 } catch (Exception e) {
                     Toast.makeText(PersonActivity.this, "Ошибка обработки данных", Toast.LENGTH_SHORT).show();
                 }
@@ -138,9 +135,7 @@ public class PersonActivity extends AppCompatActivity {
     public void onRedact(View view) {
         isEditMode = true;
         loginEditText.setEnabled(true);
-        emailEditText.setEnabled(true);
         phoneEditText.setEnabled(true);
-        addressEditText.setEnabled(true);
         editButton.setVisibility(View.GONE);
         saveButton.setVisibility(View.VISIBLE);
         editPhoto.setVisibility(View.VISIBLE);
@@ -167,11 +162,10 @@ public class PersonActivity extends AppCompatActivity {
             try {
                 String url = UserContext.URL + "?user_uid=eq." + currentUserId;
                 String data = String.format(
-                        "{\"login\":\"%s\",\"email\":\"%s\",\"phone_number\":\"%s\",\"address\":\"%s\"}",
+                        "{\"login\":\"%s\",\"email\":\"%s\",\"phone_number\":\"%s\"}",
                         loginEditText.getText().toString(),
                         emailEditText.getText().toString(),
-                        phoneEditText.getText().toString(),
-                        addressEditText.getText().toString()
+                        phoneEditText.getText().toString()
                 );
                 org.jsoup.Connection.Response response = Jsoup.connect(url)
                         .header("Authorization", UserContext.TOKEN)
@@ -194,9 +188,7 @@ public class PersonActivity extends AppCompatActivity {
             if (success) {
                 isEditMode = false;
                 loginEditText.setEnabled(false);
-                emailEditText.setEnabled(false);
                 phoneEditText.setEnabled(false);
-                addressEditText.setEnabled(false);
                 editButton.setVisibility(View.VISIBLE);
                 saveButton.setVisibility(View.GONE);
                 editPhoto.setVisibility(View.GONE);
@@ -279,6 +271,7 @@ public class PersonActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void saveImageToDatabase() {
         if (currentImageBase64 == null || currentImageBase64.isEmpty()) {
             Toast.makeText(this, "Нет изображения для сохранения", Toast.LENGTH_SHORT).show();
@@ -339,41 +332,6 @@ public class PersonActivity extends AppCompatActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream);
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         return Base64.encodeToString(byteArray, Base64.DEFAULT);
-    }
-
-    private class SaveImageTask extends AsyncTask<Void, Void, Boolean> {
-        private String error;
-
-        @Override
-        protected Boolean doInBackground(Void... voids) {
-            try {
-                String url = UserContext.URL + "?user_uid=eq." + currentUserId;
-                String data = String.format("{\"image\":\"%s\"}", currentImageBase64);
-                org.jsoup.Connection.Response response = Jsoup.connect(url)
-                        .header("Authorization", UserContext.TOKEN)
-                        .header("apikey", UserContext.SECRET)
-                        .header("Content-Type", "application/json")
-                        .header("Prefer", "return=minimal")
-                        .requestBody(data)
-                        .method(org.jsoup.Connection.Method.PATCH)
-                        .ignoreContentType(true)
-                        .execute();
-
-                return response.statusCode() == 204 || response.statusCode() == 200;
-            } catch (Exception e) {
-                error = e.getMessage();
-                return false;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Boolean success) {
-            if (success) {
-                Toast.makeText(PersonActivity.this, "Фото профиля сохранено", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(PersonActivity.this, "Ошибка сохранения фото: " + error, Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 
     @Override

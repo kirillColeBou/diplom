@@ -23,7 +23,8 @@
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
                 android:layout_marginTop="30dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:onClick="onMapActivity">
 
                 <ImageView
                     android:layout_width="25dp"
@@ -31,9 +32,10 @@
                     android:src="@drawable/map_point"/>
 
                 <TextView
+                    android:id="@+id/store_selection_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Тут находится ваш адрес"
+                    android:text="Выбрать магазин..."
                     android:layout_marginLeft="10dp"
                     android:layout_gravity="center"
                     android:textColor="#FFFFFF"

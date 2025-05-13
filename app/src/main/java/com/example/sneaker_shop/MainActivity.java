@@ -5,7 +5,10 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -30,6 +33,8 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     private BannerAdView adView;
     private long currentUserId;
     private Category currentSelectedCategory;
+    private static final int REQUEST_SELECT_STORE = 1;
+    private TextView storeSelectionText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
                 Log.d("MobileAds", "Initialization completed");
             }
         });
+        storeSelectionText = findViewById(R.id.store_selection_text);
+        storeSelectionText.setText(PreferencesHelper.getSelectedStoreAddress(this));
         adView = findViewById(R.id.adView);
         adView.setAdUnitId("demo-appopenad-yandex");
         adView.setAdSize(BannerAdSize.fixedSize(this, 400, 150));
@@ -250,5 +257,21 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
         startActivity(new Intent(this, SearchActivity.class));
         overridePendingTransition(0, 0);
         finish();
+    }
+
+    public void onMapActivity(View view) {
+        Intent intent = new Intent(this, MapActivity.class);
+        startActivityForResult(intent, REQUEST_SELECT_STORE);
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_SELECT_STORE && resultCode == RESULT_OK && data != null) {
+            String storeAddress = data.getStringExtra("store_address");
+            storeSelectionText.setText(storeAddress);
+            PreferencesHelper.saveSelectedStoreAddress(this, storeAddress);
+        }
     }
 }

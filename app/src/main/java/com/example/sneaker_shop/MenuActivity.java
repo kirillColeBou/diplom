@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -15,11 +14,9 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONArray;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import java.net.URLEncoder;
@@ -58,7 +55,7 @@ public class MenuActivity extends AppCompatActivity {
         protected JSONArray doInBackground(String... params) {
             String userId = params[0];
             try {
-                String url = UserContext.URL + "?id=eq." + URLEncoder.encode(userId, "UTF-8");
+                String url = UserContext.URL + "?user_uid=eq." + URLEncoder.encode(userId, "UTF-8");
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", UserContext.TOKEN)
                         .header("apikey", UserContext.SECRET)
