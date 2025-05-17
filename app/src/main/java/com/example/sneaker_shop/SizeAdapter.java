@@ -1,27 +1,30 @@
 package com.example.sneaker_shop;
 
+import android.graphics.Typeface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class SizeAdapter extends RecyclerView.Adapter<SizeAdapter.SizeViewHolder> {
-    private List<Size> allSizes;
-    public List<ProductSize> availableProductSizes;
+    private List<SizeDisplayModel> displaySizes;
+    private boolean isStoreSelected;
     private OnSizeSelectedListener listener;
     public int selectedPosition = -1;
 
     public interface OnSizeSelectedListener {
-        void onSizeSelected(Size size, boolean isAvailable);
+        void onSizeSelected(SizeDisplayModel size, boolean isAvailable);
     }
 
-    public SizeAdapter(List<Size> allSizes, List<ProductSize> availableProductSizes,
+    public SizeAdapter(List<SizeDisplayModel> displaySizes, boolean isStoreSelected,
                        OnSizeSelectedListener listener) {
-        this.allSizes = allSizes;
-        this.availableProductSizes = availableProductSizes;
+        this.displaySizes = displaySizes;
+        this.isStoreSelected = isStoreSelected;
         this.listener = listener;
     }
 
@@ -35,13 +38,18 @@ public class SizeAdapter extends RecyclerView.Adapter<SizeAdapter.SizeViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull SizeViewHolder holder, int position) {
-        Size size = allSizes.get(position);
-        boolean isAvailable = isSizeAvailable(size.getId());
-        int stockCount = getStockCountForSize(size.getId());
-        holder.sizeText.setText(size.getValue());
-        holder.bind(isAvailable, position == selectedPosition, stockCount);
+        SizeDisplayModel sizeModel = displaySizes.get(position);
+        Log.d("SizeAdapter", "Binding size: " + sizeModel.getValue() +
+                ", available: " + sizeModel.isAvailable() +
+                ", count: " + sizeModel.getCount());
+        holder.sizeText.setText(sizeModel.getValue());
+        boolean isAvailable = isStoreSelected ? sizeModel.isAvailable() : true;
+        holder.bind(isAvailable, position == selectedPosition, sizeModel.getCount());
         holder.itemView.setOnClickListener(v -> {
-            if (!isAvailable) return;
+            if (!isAvailable) {
+                Log.d("SizeAdapter", "Size not available: " + sizeModel.getValue());
+                return;
+            }
             int previousSelected = selectedPosition;
             selectedPosition = holder.getAdapterPosition();
             if (previousSelected != -1) {
@@ -49,32 +57,21 @@ public class SizeAdapter extends RecyclerView.Adapter<SizeAdapter.SizeViewHolder
             }
             notifyItemChanged(selectedPosition);
             if (listener != null) {
-                listener.onSizeSelected(size, true);
+                listener.onSizeSelected(sizeModel, isAvailable);
             }
+            Log.d("SizeAdapter", "Size selected: " + sizeModel.getValue());
         });
     }
 
     @Override
     public int getItemCount() {
-        return allSizes.size();
+        return displaySizes.size();
     }
 
-    private boolean isSizeAvailable(int sizeId) {
-        for (ProductSize ps : availableProductSizes) {
-            if (ps.getSizeId() == sizeId && ps.getCount() > 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private int getStockCountForSize(int sizeId) {
-        for (ProductSize ps : availableProductSizes) {
-            if (ps.getSizeId() == sizeId) {
-                return ps.getCount();
-            }
-        }
-        return 0;
+    public void updateSizes(List<SizeDisplayModel> newSizes) {
+        this.displaySizes = newSizes;
+        selectedPosition = -1; // Сбрасываем выбор при обновлении
+        notifyDataSetChanged();
     }
 
     static class SizeViewHolder extends RecyclerView.ViewHolder {
@@ -98,13 +95,19 @@ public class SizeAdapter extends RecyclerView.Adapter<SizeAdapter.SizeViewHolder
                 strikeThrough.setVisibility(View.GONE);
                 dimOverlay.setVisibility(View.GONE);
                 itemView.setAlpha(1f);
+                if (stockCount > 0 && stockCount < 5) {
+                    sizeText.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.text_secondary));
+                    sizeText.setTypeface(null, Typeface.BOLD);
+                } else {
+                    sizeText.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.black));
+                    sizeText.setTypeface(null, Typeface.NORMAL);
+                }
             } else {
                 strikeThrough.setVisibility(View.VISIBLE);
                 dimOverlay.setVisibility(View.VISIBLE);
                 itemView.setAlpha(0.7f);
-            }
-            if (stockCount > 0 && stockCount < 5) {
-                sizeText.setText(sizeText.getText());
+                sizeText.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.black));
+                sizeText.setTypeface(null, Typeface.NORMAL);
             }
         }
     }

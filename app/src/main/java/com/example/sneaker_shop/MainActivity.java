@@ -269,9 +269,20 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_SELECT_STORE && resultCode == RESULT_OK && data != null) {
+            int storeId = data.getIntExtra("store_id", -1);
             String storeAddress = data.getStringExtra("store_address");
             storeSelectionText.setText(storeAddress);
-            PreferencesHelper.saveSelectedStoreAddress(this, storeAddress);
+            PreferencesHelper.saveSelectedStore(this, storeAddress, storeId);
+            Log.d("store", storeAddress + " " + storeId);
+            if (currentSelectedCategory != null) {
+                if (currentSelectedCategory.getId() == -1) {
+                    loadRecommendedProducts();
+                } else if (currentSelectedCategory.getId() == -2) {
+                    loadProducts();
+                } else {
+                    loadProductsForCategory(currentSelectedCategory.getId());
+                }
+            }
         }
     }
 }

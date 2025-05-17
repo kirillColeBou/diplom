@@ -4,14 +4,11 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -27,12 +24,16 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ProductInfoActivity extends AppCompatActivity implements SizeAdapter.OnSizeSelectedListener {
     private TextView descriptionTextView;
@@ -67,7 +68,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         initViews();
         setupProgressBar();
         currentUserId = AuthUtils.getCurrentUserId(this);
-        currentProduct = (Product)getIntent().getSerializableExtra("product");
+        currentProduct = (Product) getIntent().getSerializableExtra("product");
         if (currentProduct != null) {
             loadInitialData();
         }
@@ -87,35 +88,13 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         imagesIndicator = findViewById(R.id.imagesIndicator);
         topProgressBar = findViewById(R.id.topProgressBar);
         contentScrollView = findViewById(R.id.contentScrollView);
+        contentScrollView.setVisibility(View.INVISIBLE);
     }
 
     private void setupProgressBar() {
         topProgressBar.setVisibility(View.VISIBLE);
-        contentScrollView.setVisibility(View.INVISIBLE);
         topProgressBar.setIndeterminate(true);
-    }
-
-    private void loadInitialData() {
-        updateBasicProductInfo(currentProduct);
-        new Thread(() -> {
-            for (int i = 0; i <= 100; i += 5) {
-                try {
-                    Thread.sleep(30);
-                    final int progress = i;
-                    runOnUiThread(() -> updateProgress(progress));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            loadHeavyData();
-            runOnUiThread(this::completeLoading);
-        }).start();
-    }
-
-    private void updateProgress(int progress) {
-        if (progress < 100) {
-            topProgressBar.setProgress(progress);
-        }
+        contentScrollView.setVisibility(View.INVISIBLE);
     }
 
     private void updateBasicProductInfo(Product product) {
@@ -126,29 +105,83 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         descriptionTextView.setText(product.getDescription());
     }
 
-    private void loadHeavyData() {
-        runOnUiThread(() -> {
-            loadProductImages(currentProduct.getId());
-            loadSizesForProduct(currentProduct.getId());
-            loadSameProducts();
-            checkFavoriteStatus();
-            setupDescriptionAnimation();
-            setupSizesRecyclerView();
+    private void loadHeavyData(boolean isFullLoad, Runnable onComplete) {
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(isFullLoad ? 4 : 3);
+        java.util.concurrent.atomic.AtomicBoolean hasError = new java.util.concurrent.atomic.AtomicBoolean(false);
+        executor.submit(() -> {
+            try {
+                loadProductImages(currentProduct.getId());
+            } catch (Exception e) {
+                hasError.set(true);
+                Log.e("ProductInfoActivity", "Image loading error: " + e.getMessage());
+            } finally {
+                latch.countDown();
+            }
         });
-        runOnUiThread(this::setupListeners);
-    }
-
-    private void completeLoading() {
-        topProgressBar.animate()
-                .alpha(0f)
-                .setDuration(300)
-                .withEndAction(() -> {
-                    topProgressBar.setVisibility(View.GONE);
-                    contentScrollView.setVisibility(View.VISIBLE);
-                    contentScrollView.setAlpha(0f);
-                    contentScrollView.animate().alpha(1f).setDuration(300).start();
-                })
-                .start();
+        executor.submit(() -> {
+            try {
+                loadSizesForProduct(currentProduct.getId());
+            } catch (Exception e) {
+                hasError.set(true);
+                Log.e("ProductInfoActivity", "Sizes loading error: " + e.getMessage());
+            } finally {
+                latch.countDown();
+            }
+        });
+        if (isFullLoad) {
+            executor.submit(() -> {
+                try {
+                    loadSameProducts();
+                    runOnUiThread(() -> {
+                        setupListeners();
+                        setupDescriptionAnimation();
+                    });
+                } catch (Exception e) {
+                    hasError.set(true);
+                    Log.e("ProductInfoActivity", "Same products loading error: " + e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        } else {
+            runOnUiThread(this::setupDescriptionAnimation);
+            latch.countDown();
+        }
+        executor.submit(() -> {
+            try {
+                checkFavoriteStatus();
+            } catch (Exception e) {
+                hasError.set(true);
+                Log.e("ProductInfoActivity", "Favorite status error: " + e.getMessage());
+            } finally {
+                latch.countDown();
+            }
+        });
+        executor.submit(() -> {
+            try {
+                latch.await();
+                if (hasError.get()) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(ProductInfoActivity.this,
+                                "Ошибка загрузки данных", Toast.LENGTH_LONG).show();
+                        startActivity(new Intent(ProductInfoActivity.this, MainActivity.class));
+                        finish();
+                    });
+                } else {
+                    onComplete.run();
+                }
+            } catch (InterruptedException e) {
+                Log.e("ProductInfoActivity", "Error waiting for tasks: " + e.getMessage());
+                runOnUiThread(() -> {
+                    Toast.makeText(ProductInfoActivity.this,
+                            "Ошибка загрузки данных", Toast.LENGTH_LONG).show();
+                    startActivity(new Intent(ProductInfoActivity.this, MainActivity.class));
+                    finish();
+                });
+            }
+        });
+        executor.shutdown();
     }
 
     private void loadProductImages(int productId) {
@@ -157,9 +190,8 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             public void onSuccess(List<String> images) {
                 runOnUiThread(() -> {
                     productImages.clear();
-                    productImages.addAll(images);
+                    productImages.addAll(images.isEmpty() ? Collections.singletonList("") : images);
                     setupImagesPager();
-                    setupImagesIndicator();
                 });
             }
 
@@ -168,7 +200,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                 Log.e("ProductInfo", "Error loading images: " + error);
                 runOnUiThread(() -> {
                     productImages.clear();
-                    productImages.add("default_image_base64");
+                    productImages.add("");
                     setupImagesPager();
                 });
             }
@@ -176,15 +208,25 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void setupImagesPager() {
-        imagesAdapter = new ProductImagesAdapter(productImages);
-        productImagesPager.setAdapter(imagesAdapter);
-        productImagesPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-                updateImagesIndicator(position);
-            }
-        });
+        if (productImages.isEmpty() || productImages.contains("")) {
+            productImages.clear();
+            productImages.add("");
+        }
+        if (imagesAdapter == null) {
+            imagesAdapter = new ProductImagesAdapter(productImages);
+            productImagesPager.setAdapter(imagesAdapter);
+            productImagesPager.setOffscreenPageLimit(1);
+            productImagesPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    super.onPageSelected(position);
+                    updateImagesIndicator(position);
+                }
+            });
+        } else {
+            imagesAdapter.updateImages(productImages);
+        }
+        setupImagesIndicator();
     }
 
     private void setupImagesIndicator() {
@@ -238,24 +280,33 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void setupDescriptionAnimation() {
+        resetDescriptionState();
         descriptionContainer.post(() -> {
             descriptionTextView.setMaxLines(3);
             descriptionTextView.setEllipsize(TextUtils.TruncateAt.END);
-            collapsedHeight = descriptionContainer.getHeight();
+            descriptionContainer.measure(
+                    View.MeasureSpec.makeMeasureSpec(descriptionContainer.getWidth(), View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            collapsedHeight = descriptionContainer.getMeasuredHeight();
+            Log.d("ProductInfoActivity", "Collapsed height: " + collapsedHeight);
             descriptionTextView.setMaxLines(Integer.MAX_VALUE);
             descriptionTextView.setEllipsize(null);
             descriptionContainer.measure(
                     View.MeasureSpec.makeMeasureSpec(descriptionContainer.getWidth(), View.MeasureSpec.EXACTLY),
                     View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
             expandedHeight = descriptionContainer.getMeasuredHeight();
+            Log.d("ProductInfoActivity", "Expanded height: " + expandedHeight);
             descriptionTextView.setMaxLines(3);
             descriptionTextView.setEllipsize(TextUtils.TruncateAt.END);
+            descriptionContainer.requestLayout();
             if (collapsedHeight >= expandedHeight) {
                 expandCollapseButton.setVisibility(View.GONE);
                 isInitialized = false;
+                Log.d("ProductInfoActivity", "Description too short, hiding button");
             } else {
                 expandCollapseButton.setVisibility(View.VISIBLE);
                 isInitialized = true;
+                Log.d("ProductInfoActivity", "Description expandable, button visible");
             }
         });
     }
@@ -329,6 +380,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             });
             sameProductsRecyclerView.setClipToPadding(false);
             sameProductsRecyclerView.setPadding(0, 0, 0, 0);
+            sameProductsRecyclerView.setItemAnimator(new DefaultItemAnimator());
             sameProductsRecyclerView.setAdapter(sameProductAdapter);
             sameProductAdapter.setOnItemClickListener(position -> {
                 Product selectedProduct = sameProducts.get(position);
@@ -345,30 +397,38 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         }
     }
 
-    private void updateProductInfo(Product product) {
-        topProgressBar.setVisibility(View.VISIBLE);
-        topProgressBar.setAlpha(1f);
-        topProgressBar.setProgress(0);
-        updateBasicProductInfo(product);
-        currentProduct = product;
+    private void loadInitialData() {
+        setupProgressBar();
         new Thread(() -> {
-            for (int i = 0; i <= 100; i += 20) {
-                try {
-                    Thread.sleep(50);
-                    final int progress = i;
-                    runOnUiThread(() -> updateProgress(progress));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            runOnUiThread(() -> {
-                loadHeavyData();
-                topProgressBar.animate()
-                        .alpha(0f)
-                        .setDuration(300)
-                        .withEndAction(() -> topProgressBar.setVisibility(View.GONE))
-                        .start();
-            });
+            loadHeavyData(true, () -> runOnUiThread(() -> {
+                updateBasicProductInfo(currentProduct);
+                completeLoading();
+            }));
+        }).start();
+    }
+
+    private void completeLoading() {
+        Log.d("ProductInfoActivity", "Completing loading, showing UI");
+        topProgressBar.animate()
+                .alpha(0f)
+                .setDuration(200)
+                .withEndAction(() -> {
+                    topProgressBar.setVisibility(View.GONE);
+                    contentScrollView.setVisibility(View.VISIBLE);
+                    contentScrollView.setAlpha(0f);
+                    contentScrollView.animate().alpha(1f).setDuration(200).start();
+                })
+                .start();
+    }
+
+    private void updateProductInfo(Product product) {
+        currentProduct = product;
+        setupProgressBar();
+        new Thread(() -> {
+            loadHeavyData(false, () -> runOnUiThread(() -> {
+                updateBasicProductInfo(currentProduct);
+                completeLoading();
+            }));
         }).start();
     }
 
@@ -392,55 +452,142 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         });
         sizesRecyclerView.setClipToPadding(false);
         sizesRecyclerView.setPadding(0, 0, 0, 0);
+        sizesRecyclerView.setItemAnimator(new DefaultItemAnimator());
     }
 
     private void loadSizesForProduct(int productId) {
-        SizeContext.loadAllSizesAndProductSizes(productId, new SizeContext.AllSizesCallback() {
+        Log.d("ProductInfoActivity", "Loading sizes for product: " + productId +
+                ", storeId: " + PreferencesHelper.getSelectedStoreId(this));
+        SizeContext.loadAllSizesAndProductSizes(this, productId, new SizeContext.AllSizesCallback() {
             @Override
             public void onSuccess(List<Size> allSizes, List<ProductSize> productSizes) {
+                Log.d("ProductInfoActivity", "Sizes loaded. All sizes: " + allSizes.size() +
+                        ", product sizes: " + productSizes.size());
+                for (ProductSize ps : productSizes) {
+                    Log.d("ProductInfoActivity", "ProductSize: id=" + ps.getId() +
+                            ", product_id=" + ps.getProductId() +
+                            ", size_id=" + ps.getSizeId() +
+                            ", count=" + ps.getCount() +
+                            ", store_id=" + ps.getStoreId());
+                }
                 runOnUiThread(() -> {
-                    sizeAdapter = new SizeAdapter(allSizes, productSizes, ProductInfoActivity.this);
-                    sizesRecyclerView.setAdapter(sizeAdapter);
-                    selectFirstAvailableSize(allSizes, productSizes);
+                    try {
+                        setupSizesRecyclerView();
+                        int storeId = PreferencesHelper.getSelectedStoreId(ProductInfoActivity.this);
+                        boolean isStoreSelected = storeId != -1;
+                        List<SizeDisplayModel> displaySizes = new ArrayList<>();
+                        for (Size size : allSizes) {
+                            boolean isAvailable = false;
+                            int count = 0;
+                            for (ProductSize ps : productSizes) {
+                                if (ps.getSizeId() == size.getId() && (!isStoreSelected || ps.getStoreId() == storeId)) {
+                                    isAvailable = ps.getCount() > 0;
+                                    count = ps.getCount();
+                                    break;
+                                }
+                            }
+                            displaySizes.add(new SizeDisplayModel(
+                                    size.getId(),
+                                    size.getValue(),
+                                    isAvailable,
+                                    isStoreSelected ? count : -1
+                            ));
+                            Log.d("ProductInfoActivity", "Added size: " + size.getValue() +
+                                    ", available: " + isAvailable +
+                                    ", count: " + (isStoreSelected ? count : -1));
+                        }
+                        Log.d("ProductInfoActivity", "Display sizes count: " + displaySizes.size());
+                        if (displaySizes.isEmpty()) {
+                            Log.w("ProductInfoActivity", "No sizes available for productId=" + productId);
+                            Toast.makeText(ProductInfoActivity.this,
+                                    "Размеры отсутствуют",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        if (sizeAdapter == null) {
+                            sizeAdapter = new SizeAdapter(displaySizes, isStoreSelected, ProductInfoActivity.this);
+                            sizesRecyclerView.setAdapter(sizeAdapter);
+                        } else {
+                            sizeAdapter.updateSizes(displaySizes);
+                        }
+                        selectFirstAvailableSize(displaySizes, isStoreSelected);
+                    } catch (Exception e) {
+                        Log.e("ProductInfoActivity", "Error processing sizes", e);
+                        Toast.makeText(ProductInfoActivity.this,
+                                "Ошибка обработки размеров",
+                                Toast.LENGTH_SHORT).show();
+                    }
                 });
             }
 
             @Override
             public void onError(String error) {
+                Log.e("ProductInfoActivity", "Error loading sizes: " + error);
                 runOnUiThread(() -> {
                     Toast.makeText(ProductInfoActivity.this,
-                            "Ошибка загрузки размеров",
+                            "Ошибка загрузки размеров: " + error,
                             Toast.LENGTH_SHORT).show();
                 });
             }
         });
     }
 
-    private void selectFirstAvailableSize(List<Size> allSizes, List<ProductSize> productSizes) {
-        for (int i = 0; i < allSizes.size(); i++) {
-            Size size = allSizes.get(i);
-            for (ProductSize ps : productSizes) {
-                if (ps.getSizeId() == size.getId() && ps.getCount() > 0) {
-                    sizeAdapter.selectedPosition = i;
-                    onSizeSelected(size, true);
-                    return;
+    private void selectFirstAvailableSize(List<SizeDisplayModel> displaySizes, boolean isStoreSelected) {
+        try {
+            if (isStoreSelected) {
+                for (int i = 0; i < displaySizes.size(); i++) {
+                    SizeDisplayModel size = displaySizes.get(i);
+                    if (size.isAvailable()) {
+                        sizeAdapter.selectedPosition = i;
+                        onSizeSelected(size, true);
+                        Log.d("ProductInfoActivity", "Selected first available size: " + size.getValue());
+                        return;
+                    }
+                }
+                if (!displaySizes.isEmpty()) {
+                    sizeAdapter.selectedPosition = -1;
+                    onSizeSelected(displaySizes.get(-1), false);
+                    Log.d("ProductInfoActivity", "No available sizes, selected first unavailable: " + displaySizes.get(0).getValue());
+                } else {
+                    onSizeSelected(null, false);
+                    Log.d("ProductInfoActivity", "No sizes to select");
+                }
+            } else {
+                if (!displaySizes.isEmpty()) {
+                    sizeAdapter.selectedPosition = 0;
+                    onSizeSelected(displaySizes.get(0), true);
+                    Log.d("ProductInfoActivity", "No store selected, selected first size: " + displaySizes.get(0).getValue());
+                } else {
+                    onSizeSelected(null, false);
+                    Log.d("ProductInfoActivity", "No sizes to select");
                 }
             }
+        } catch (Exception e) {
+            Log.e("ProductInfoActivity", "Error in selectFirstAvailableSize", e);
+            onSizeSelected(null, false);
         }
-        onSizeSelected(null, false);
     }
 
     @Override
-    public void onSizeSelected(Size size, boolean isAvailable) {
+    public void onSizeSelected(SizeDisplayModel size, boolean isAvailable) {
+        boolean isStoreSelected = PreferencesHelper.getSelectedStoreId(this) != -1;
         if (size != null && isAvailable) {
-            int stockCount = getStockCountForSize(size.getId(), sizeAdapter.availableProductSizes);
             String stockText;
-            if (stockCount == 1) {
-                stockText = "Осталась последняя пара!";
-                stockCountTextView.setTextColor(Color.RED);
-                stockCountTextView.setTypeface(null, Typeface.BOLD);
+            if (isStoreSelected) {
+                if (size.getCount() == 1) {
+                    stockText = "Осталась последняя пара!";
+                    stockCountTextView.setTextColor(Color.RED);
+                    stockCountTextView.setTypeface(null, Typeface.BOLD);
+                } else if (size.getCount() > 0) {
+                    stockText = String.format("В наличии: %d пар(-а)", size.getCount());
+                    stockCountTextView.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+                    stockCountTextView.setTypeface(null, Typeface.NORMAL);
+                } else {
+                    stockText = "Нет в наличии";
+                    stockCountTextView.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+                    stockCountTextView.setTypeface(null, Typeface.NORMAL);
+                }
             } else {
-                stockText = String.format("В наличии: %d пар(-а)", stockCount);
+                stockText = "В наличии";
                 stockCountTextView.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
                 stockCountTextView.setTypeface(null, Typeface.NORMAL);
             }
@@ -450,15 +597,6 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             stockCountTextView.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
             stockCountTextView.setTypeface(null, Typeface.NORMAL);
         }
-    }
-
-    private int getStockCountForSize(int sizeId, List<ProductSize> productSizes) {
-        for (ProductSize ps : productSizes) {
-            if (ps.getSizeId() == sizeId) {
-                return ps.getCount();
-            }
-        }
-        return 0;
     }
 
     private void checkFavoriteStatus() {
@@ -518,7 +656,10 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void toggleDescription() {
-        if (!isInitialized || expandCollapseButton.getVisibility() != View.VISIBLE) return;
+        if (!isInitialized || expandCollapseButton.getVisibility() != View.VISIBLE) {
+            Log.d("ProductInfoActivity", "Toggle skipped: not initialized or button invisible");
+            return;
+        }
         if (isDescriptionExpanded) {
             collapseDescription();
         } else {
@@ -543,10 +684,11 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         heightAnimator.setInterpolator(new DecelerateInterpolator());
         heightAnimator.start();
         alphaAnimator.start();
-
         descriptionTextView.setMaxLines(Integer.MAX_VALUE);
         descriptionTextView.setEllipsize(null);
+        expandCollapseButton.setVisibility(View.VISIBLE);
         isDescriptionExpanded = true;
+        Log.d("ProductInfoActivity", "Expanded description, maxLines=MAX, button visible");
     }
 
     private void collapseDescription() {
@@ -566,15 +708,37 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         heightAnimator.setInterpolator(new AccelerateInterpolator());
         heightAnimator.start();
         alphaAnimator.start();
-
         descriptionTextView.setMaxLines(3);
         descriptionTextView.setEllipsize(TextUtils.TruncateAt.END);
+        expandCollapseButton.setVisibility(View.VISIBLE);
+        descriptionContainer.requestLayout();
         isDescriptionExpanded = false;
+        Log.d("ProductInfoActivity", "Collapsed description, maxLines=3, button visible");
+    }
+
+    private void resetDescriptionState() {
+        isDescriptionExpanded = false;
+        descriptionTextView.setMaxLines(3);
+        descriptionTextView.setEllipsize(TextUtils.TruncateAt.END);
+        expandCollapseButton.setText("Подробнее");
+        expandCollapseButton.setVisibility(View.VISIBLE);
+        descriptionContainer.setAlpha(0.7f);
+        ViewGroup.LayoutParams params = descriptionContainer.getLayoutParams();
+        params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        descriptionContainer.setLayoutParams(params);
     }
 
     public void onBack(View view) {
         startActivity(new Intent(this, MainActivity.class));
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
         finish();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (currentProduct != null) {
+            loadSizesForProduct(currentProduct.getId());
+        }
     }
 }

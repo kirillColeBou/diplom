@@ -1,7 +1,7 @@
 package com.example.sneaker_shop;
 
+import android.content.Context;
 import android.os.AsyncTask;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 import org.json.JSONArray;
@@ -21,16 +21,18 @@ public class SizeContext {
         void onError(String error);
     }
 
-    public static void loadAllSizesAndProductSizes(int productId, AllSizesCallback callback) {
-        new LoadAllSizesTask(productId, callback).execute();
+    public static void loadAllSizesAndProductSizes(Context context, int productId, AllSizesCallback callback) {
+        new LoadAllSizesTask(context, productId, callback).execute();
     }
 
     private static class LoadAllSizesTask extends AsyncTask<Void, Void, Pair<List<Size>, List<ProductSize>>> {
+        private final Context context;
         private final int productId;
         private final AllSizesCallback callback;
         private String error;
 
-        LoadAllSizesTask(int productId, AllSizesCallback callback) {
+        LoadAllSizesTask(Context context, int productId, AllSizesCallback callback) {
+            this.context = context;
             this.productId = productId;
             this.callback = callback;
         }
@@ -50,7 +52,16 @@ public class SizeContext {
                     JSONObject obj = allSizesArray.getJSONObject(i);
                     allSizes.add(new Size(obj.getInt("id"), obj.getString("value")));
                 }
-                String productSizesUrl = URL + "product_size?product_id=eq." + productId;
+                int selectedStoreId = PreferencesHelper.getSelectedStoreId(context);
+                String productSizesUrl;
+
+                if (selectedStoreId != -1) {
+                    productSizesUrl = URL + "product_size?product_id=eq." + productId +
+                            "&store_id=eq." + selectedStoreId + "&select=id,product_id,size_id,count,store_id";
+                } else {
+                    productSizesUrl = URL + "product_size?product_id=eq." + productId +
+                            "&select=id,product_id,size_id,count,store_id";
+                }
                 Document productSizesDoc = Jsoup.connect(productSizesUrl)
                         .header("apikey", SECRET)
                         .header("Authorization", TOKEN)
@@ -64,12 +75,14 @@ public class SizeContext {
                             obj.getInt("id"),
                             obj.getInt("product_id"),
                             obj.getInt("size_id"),
-                            obj.getInt("count")
+                            obj.getInt("count"),
+                            obj.optInt("store_id", -1)
                     ));
                 }
                 return new Pair<>(allSizes, productSizes);
             } catch (Exception e) {
                 error = "Error loading sizes: " + e.getMessage();
+                Log.e("SizeContext", error, e);
                 return null;
             }
         }
@@ -78,8 +91,10 @@ public class SizeContext {
         protected void onPostExecute(Pair<List<Size>, List<ProductSize>> result) {
             if (error != null) {
                 callback.onError(error);
-            } else {
+            } else if (result != null) {
                 callback.onSuccess(result.first, result.second);
+            } else {
+                callback.onError("Unknown error occurred");
             }
         }
     }

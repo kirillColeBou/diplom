@@ -254,7 +254,7 @@ public class MapActivity extends AppCompatActivity {
                     Toast.LENGTH_LONG).show();
             mapView.getMap().move(
                     new CameraPosition(
-                            new Point(55.751244, 37.618423),  // Москва
+                            new Point(55.751244, 37.618423),
                             12.0f,
                             0.0f,
                             0.0f
@@ -331,13 +331,18 @@ public class MapActivity extends AppCompatActivity {
         Button selectButton = bottomSheetView.findViewById(R.id.select_store_button);
         selectButton.setOnClickListener(v -> {
             if (selectedStore != null) {
+                Log.d("MapActivity", "Selected store: ID=" + selectedStore.id + ", Address=" + selectedStore.address);
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("store_address", selectedStore.address);
+                resultIntent.putExtra("store_id", selectedStore.id);
+                PreferencesHelper.saveSelectedStore(MapActivity.this, selectedStore.address, selectedStore.id);
                 setResult(RESULT_OK, resultIntent);
-                PreferencesHelper.saveSelectedStoreAddress(MapActivity.this, selectedStore.address);
                 bottomSheetDialog.dismiss();
                 finish();
                 overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            } else {
+                Log.e("MapActivity", "Selected store is null");
+                Toast.makeText(MapActivity.this, "Ошибка: магазин не выбран", Toast.LENGTH_SHORT).show();
             }
         });
         bottomSheetDialog.setOnShowListener(dialog -> {
