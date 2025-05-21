@@ -108,7 +108,7 @@
                     android:paddingBottom="80dp"/>
 
                 <LinearLayout
-                    android:id="@+id/empty_cart"
+                    android:id="@+id/empty_search_item"
                     android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

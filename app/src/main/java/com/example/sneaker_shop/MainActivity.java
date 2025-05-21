@@ -47,20 +47,8 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
         }
         setContentView(R.layout.main_activity);
         currentUserId = AuthUtils.getCurrentUserId(this);
-        Log.d("main", String.valueOf(currentUserId));
-        MobileAds.initialize(this, new InitializationListener() {
-            @Override
-            public void onInitializationCompleted() {
-                Log.d("MobileAds", "Initialization completed");
-            }
-        });
         storeSelectionText = findViewById(R.id.store_selection_text);
         storeSelectionText.setText(PreferencesHelper.getSelectedStoreAddress(this));
-        adView = findViewById(R.id.adView);
-        adView.setAdUnitId("demo-appopenad-yandex");
-        adView.setAdSize(BannerAdSize.fixedSize(this, 400, 150));
-        AdRequest adRequest = new AdRequest.Builder().build();
-        adView.loadAd(adRequest);
         initCategories();
         swipeRefresh = findViewById(R.id.swipeRefresh);
         swipeRefresh.setOnRefreshListener(() -> {

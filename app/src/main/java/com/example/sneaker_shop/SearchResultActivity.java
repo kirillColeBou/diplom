@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,7 @@ public class SearchResultActivity extends AppCompatActivity
     private List<Product> productList = new ArrayList<>();
     private long currentUserId;
     private String searchQuery;
+    private LinearLayout emptySearchLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,8 +30,20 @@ public class SearchResultActivity extends AppCompatActivity
         searchQuery = getIntent().getStringExtra("search_query");
         TextView searchTextView = findViewById(R.id.searchResult);
         searchTextView.setText(searchQuery);
+        emptySearchLayout = findViewById(R.id.empty_search_item);
         initProductsRecyclerView();
         loadSearchResults();
+        checkEmptyState();
+    }
+
+    private void checkEmptyState() {
+        if (productList.isEmpty()) {
+            productsRecyclerView.setVisibility(View.GONE);
+            emptySearchLayout.setVisibility(View.VISIBLE);
+        } else {
+            productsRecyclerView.setVisibility(View.VISIBLE);
+            emptySearchLayout.setVisibility(View.GONE);
+        }
     }
 
     private void initProductsRecyclerView() {
@@ -99,11 +113,8 @@ public class SearchResultActivity extends AppCompatActivity
                             productList.add(product);
                         }
                     }
-                    if (productList.isEmpty()) {
-                        Toast.makeText(SearchResultActivity.this,
-                                "Ничего не найдено", Toast.LENGTH_SHORT).show();
-                    }
                     productAdapter.notifyDataSetChanged();
+                    checkEmptyState();
                 });
             }
 
@@ -112,6 +123,7 @@ public class SearchResultActivity extends AppCompatActivity
                 runOnUiThread(() -> {
                     Toast.makeText(SearchResultActivity.this,
                             "Ошибка загрузки товаров", Toast.LENGTH_SHORT).show();
+                    checkEmptyState();
                 });
             }
         });
