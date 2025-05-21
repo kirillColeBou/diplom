@@ -228,7 +228,7 @@
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
                 android:orientation="horizontal"
-                android:weightSum="4">
+                android:weightSum="5">
 
                 <ImageView
                     android:layout_width="0dp"
@@ -250,6 +250,13 @@
                     android:layout_weight="1"
                     android:src="@drawable/favorite"
                     android:onClick="onFavorite"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="25dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/cart"
+                    android:onClick="onCart"/>
 
                 <ImageView
                     android:layout_width="0dp"

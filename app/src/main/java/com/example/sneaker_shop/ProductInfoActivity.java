@@ -456,20 +456,9 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void loadSizesForProduct(int productId) {
-        Log.d("ProductInfoActivity", "Loading sizes for product: " + productId +
-                ", storeId: " + PreferencesHelper.getSelectedStoreId(this));
         SizeContext.loadAllSizesAndProductSizes(this, productId, new SizeContext.AllSizesCallback() {
             @Override
             public void onSuccess(List<Size> allSizes, List<ProductSize> productSizes) {
-                Log.d("ProductInfoActivity", "Sizes loaded. All sizes: " + allSizes.size() +
-                        ", product sizes: " + productSizes.size());
-                for (ProductSize ps : productSizes) {
-                    Log.d("ProductInfoActivity", "ProductSize: id=" + ps.getId() +
-                            ", product_id=" + ps.getProductId() +
-                            ", size_id=" + ps.getSizeId() +
-                            ", count=" + ps.getCount() +
-                            ", store_id=" + ps.getStoreId());
-                }
                 runOnUiThread(() -> {
                     try {
                         setupSizesRecyclerView();
@@ -479,10 +468,12 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                         for (Size size : allSizes) {
                             boolean isAvailable = false;
                             int count = 0;
+                            int productSizeId = -1;
                             for (ProductSize ps : productSizes) {
                                 if (ps.getSizeId() == size.getId() && (!isStoreSelected || ps.getStoreId() == storeId)) {
                                     isAvailable = ps.getCount() > 0;
                                     count = ps.getCount();
+                                    productSizeId = ps.getId();
                                     break;
                                 }
                             }
@@ -490,18 +481,9 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                                     size.getId(),
                                     size.getValue(),
                                     isAvailable,
-                                    isStoreSelected ? count : -1
+                                    isStoreSelected ? count : -1,
+                                    productSizeId
                             ));
-                            Log.d("ProductInfoActivity", "Added size: " + size.getValue() +
-                                    ", available: " + isAvailable +
-                                    ", count: " + (isStoreSelected ? count : -1));
-                        }
-                        Log.d("ProductInfoActivity", "Display sizes count: " + displaySizes.size());
-                        if (displaySizes.isEmpty()) {
-                            Log.w("ProductInfoActivity", "No sizes available for productId=" + productId);
-                            Toast.makeText(ProductInfoActivity.this,
-                                    "Размеры отсутствуют",
-                                    Toast.LENGTH_SHORT).show();
                         }
                         if (sizeAdapter == null) {
                             sizeAdapter = new SizeAdapter(displaySizes, isStoreSelected, ProductInfoActivity.this);
@@ -511,10 +493,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                         }
                         selectFirstAvailableSize(displaySizes, isStoreSelected);
                     } catch (Exception e) {
-                        Log.e("ProductInfoActivity", "Error processing sizes", e);
-                        Toast.makeText(ProductInfoActivity.this,
-                                "Ошибка обработки размеров",
-                                Toast.LENGTH_SHORT).show();
+                        Log.e("ProductInfoActivity", "Ошибка обработки размеров", e);
                     }
                 });
             }
@@ -740,5 +719,58 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         if (currentProduct != null) {
             loadSizesForProduct(currentProduct.getId());
         }
+    }
+
+    public void onAddCart(View view) {
+        if (!AuthUtils.isUserLoggedIn(this)) {
+            startActivity(new Intent(this, AuthorizationActivity.class));
+            return;
+        }
+        int selectedStoreId = PreferencesHelper.getSelectedStoreId(this);
+        if (selectedStoreId == -1) {
+            Toast.makeText(this, "Пожалуйста, выберите магазин", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (sizeAdapter == null || sizeAdapter.getSelectedSize() == null) {
+            Toast.makeText(this, "Пожалуйста, выберите размер", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        SizeDisplayModel selectedSize = sizeAdapter.getSelectedSize();
+        if (!selectedSize.isAvailable()) {
+            Toast.makeText(this, "Выбранный размер недоступен в этом магазине", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        addToCart(String.valueOf(selectedSize.getProductSizeId()), selectedStoreId);
+    }
+
+    private void addToCart(String productSizeId, int storeId) {
+        CartContext.getUserBasket(currentUserId, new CartContext.BasketCallback() {
+            @Override
+            public void onSuccess(String basketId) {
+                CartContext.addToBasket(basketId, productSizeId, 1, storeId, new CartContext.AddToBasketCallback() {
+                    @Override
+                    public void onSuccess() {
+                        runOnUiThread(() -> {
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(ProductInfoActivity.this,
+                                    "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    Toast.makeText(ProductInfoActivity.this,
+                            "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 }

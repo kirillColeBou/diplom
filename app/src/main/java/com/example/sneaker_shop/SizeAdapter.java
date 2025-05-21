@@ -70,8 +70,15 @@ public class SizeAdapter extends RecyclerView.Adapter<SizeAdapter.SizeViewHolder
 
     public void updateSizes(List<SizeDisplayModel> newSizes) {
         this.displaySizes = newSizes;
-        selectedPosition = -1; // Сбрасываем выбор при обновлении
+        selectedPosition = -1;
         notifyDataSetChanged();
+    }
+
+    public SizeDisplayModel getSelectedSize() {
+        if (selectedPosition >= 0 && selectedPosition < displaySizes.size()) {
+            return displaySizes.get(selectedPosition);
+        }
+        return null;
     }
 
     static class SizeViewHolder extends RecyclerView.ViewHolder {

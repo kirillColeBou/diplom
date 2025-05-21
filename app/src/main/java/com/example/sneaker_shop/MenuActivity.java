@@ -108,6 +108,12 @@ public class MenuActivity extends AppCompatActivity {
         finish();
     }
 
+    public void onCart(View view) {
+        startActivity(new Intent(this, CartActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
+    }
+
     public void onLogout(View view) {
         AuthUtils.logout(this);
         Intent intent = new Intent(this, AuthorizationActivity.class);

@@ -52,7 +52,7 @@
             </LinearLayout>
 
             <ImageView
-                android:id="@+id/iamge_product"
+                android:id="@+id/image_product"
                 android:layout_width="160dp"
                 android:layout_height="80dp"
                 android:src="@drawable/nike_air_force"
@@ -63,28 +63,6 @@
         </FrameLayout>
 
     </LinearLayout>
-
-    <!--<LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="8dp">
-
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/viewPager"
-            android:layout_width="160dp"
-            android:layout_height="100dp"
-            android:layout_gravity="center"/>
-
-        <LinearLayout
-            android:id="@+id/dotsLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="horizontal"
-            android:paddingTop="8dp"/>
-
-    </LinearLayout>-->
 
     <LinearLayout
         android:layout_width="match_parent"

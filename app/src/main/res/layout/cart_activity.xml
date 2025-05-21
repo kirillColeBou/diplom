@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".FavoriteActivity"
+    tools:context=".CartActivity"
     android:background="#F7F7F9">
 
     <LinearLayout
@@ -21,7 +21,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Избранное"
+                android:text="Корзина"
                 android:layout_gravity="center"
                 android:textColor="#000000"
                 android:layout_marginTop="30dp"
@@ -53,7 +53,7 @@
                     android:paddingBottom="80dp"/>
 
                 <LinearLayout
-                    android:id="@+id/empty_favorite"
+                    android:id="@+id/empty_cart"
                     android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -64,7 +64,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="В избранном пока пусто"
+                        android:text="В корзине нет товаров"
                         android:textSize="20sp"
                         android:textStyle="bold"
                         android:textColor="#2B2B2B"
@@ -73,7 +73,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Присмотритесь к парам,\nкоторые подобрали для вас"
+                        android:text="Изучите предложенные комбинации"
                         android:textSize="16sp"
                         android:layout_marginTop="8dp"
                         android:textColor="#2B2B2B"
@@ -120,14 +120,14 @@
                     android:layout_width="0dp"
                     android:layout_height="25dp"
                     android:layout_weight="1"
-                    android:src="@drawable/favorite_select"/>
+                    android:src="@drawable/favorite"
+                    android:onClick="onFavorite"/>
 
                 <ImageView
                     android:layout_width="0dp"
                     android:layout_height="25dp"
                     android:layout_weight="1"
-                    android:src="@drawable/cart"
-                    android:onClick="onCart"/>
+                    android:src="@drawable/cart_select"/>
 
                 <ImageView
                     android:layout_width="0dp"

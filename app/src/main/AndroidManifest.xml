@@ -35,6 +35,7 @@
         <activity android:name=".MainActivity"/>
         <activity android:name=".MenuActivity"/>
         <activity android:name=".SearchActivity"/>
+        <activity android:name=".CartActivity"/>
         <activity android:name=".SearchResultActivity"/>
         <activity android:name=".ProductInfoActivity"/>
         <activity android:name=".PersonActivity"/>
