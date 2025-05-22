@@ -190,6 +190,8 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                     productImages.clear();
                     productImages.addAll(images.isEmpty() ? Collections.singletonList("") : images);
                     setupImagesPager();
+                    productImagesPager.setCurrentItem(0, false);
+                    updateImagesIndicator(0);
                 });
             }
 
@@ -199,6 +201,8 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                     productImages.clear();
                     productImages.add("");
                     setupImagesPager();
+                    productImagesPager.setCurrentItem(0, false);
+                    updateImagesIndicator(0);
                 });
             }
         });
@@ -419,6 +423,8 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         new Thread(() -> {
             loadHeavyData(false, () -> runOnUiThread(() -> {
                 updateBasicProductInfo(currentProduct);
+                productImagesPager.setCurrentItem(0, false);
+                updateImagesIndicator(0);
                 completeLoading();
             }));
         }).start();
@@ -813,27 +819,37 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             updateCartButton(false);
             return;
         }
+
         SizeDisplayModel selectedSize = sizeAdapter.getSelectedSize();
         int selectedStoreId = PreferencesHelper.getSelectedStoreId(this);
-        if (selectedStoreId == -1 || !selectedSize.isAvailable()) {
+
+        if (selectedStoreId == -1 || !selectedSize.isAvailable() || selectedSize.getProductSizeId() == 0) {
             updateCartButton(false);
             return;
         }
+
         CartContext.getUserBasket(currentUserId, new CartContext.BasketCallback() {
             @Override
             public void onSuccess(String basketId) {
                 String filter = "basket_id=eq." + basketId +
                         "&product_size_id=eq." + selectedSize.getProductSizeId() +
                         "&store_id=eq." + selectedStoreId +
-                        "&select=id,count";
+                        "&select=id,count,product_size_id";
                 CartContext.loadSimpleCartItems(filter, new CartContext.LoadCartCallback() {
                     @Override
                     public void onSuccess(List<CartItem> items) {
                         runOnUiThread(() -> {
                             if (items != null && !items.isEmpty()) {
-                                isInCart = true;
-                                cartItemId = items.get(0).getId();
-                                itemCountInCart = items.get(0).getCount();
+                                CartItem cartItem = items.get(0);
+                                if (cartItem.getProductSizeId() == selectedSize.getProductSizeId()) {
+                                    isInCart = true;
+                                    cartItemId = cartItem.getId();
+                                    itemCountInCart = cartItem.getCount();
+                                } else {
+                                    isInCart = false;
+                                    cartItemId = null;
+                                    itemCountInCart = 0;
+                                }
                             } else {
                                 isInCart = false;
                                 cartItemId = null;

@@ -2,10 +2,9 @@ package com.example.sneaker_shop;
 
 import android.os.AsyncTask;
 import android.util.Log;
-
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import java.util.ArrayList;
@@ -55,6 +54,10 @@ public class CartContext {
 
     public static void loadSimpleCartItems(String filter, LoadCartCallback callback) {
         new LoadSimpleCartItemsTask(filter, callback).execute();
+    }
+
+    public static void clearCart(String basketId, UpdateCartCallback callback) {
+        new ClearCartTask(basketId, callback).execute();
     }
 
     private static class GetBasketTask extends AsyncTask<Void, Void, String> {
@@ -166,7 +169,6 @@ public class CartContext {
                     error = "Нельзя добавить больше " + maxAllowed + " единиц";
                     return false;
                 }
-
                 if (items.length() > 0) {
                     JSONObject update = new JSONObject();
                     update.put("count", currentCount + quantity);
@@ -231,10 +233,15 @@ public class CartContext {
                         .header("apikey", SECRET)
                         .ignoreContentType(true)
                         .get();
+
                 JSONArray basketItemsArray = new JSONArray(basketDoc.body().text());
                 List<CartItem> items = new ArrayList<>();
+
                 for (int i = 0; i < basketItemsArray.length(); i++) {
                     JSONObject itemObj = basketItemsArray.getJSONObject(i);
+                    if (!itemObj.has("product_size_id")) {
+                        continue;
+                    }
                     int productSizeId = itemObj.getInt("product_size_id");
                     int count = itemObj.getInt("count");
                     String itemId = itemObj.getString("id");
@@ -279,7 +286,9 @@ public class CartContext {
                         JSONObject sizeObj = sizeArray.getJSONObject(0);
                         sizeValue = sizeObj.getString("value");
                     }
-                    items.add(new CartItem(itemId, product, count, sizeValue, availableQuantity));
+                    CartItem item = new CartItem(itemId, product, count, sizeValue,
+                            availableQuantity, productSizeId);
+                    items.add(item);
                 }
                 return items;
             } catch (Exception e) {
@@ -411,12 +420,17 @@ public class CartContext {
                     JSONObject itemObj = itemsArray.getJSONObject(i);
                     String id = itemObj.getString("id");
                     int count = itemObj.getInt("count");
-                    items.add(new CartItem(id, null, count, null, 0));
+                    int productSizeId = 0;
+                    if (itemObj.has("product_size_id") && !itemObj.isNull("product_size_id")) {
+                        productSizeId = itemObj.getInt("product_size_id");
+                    }
+                    CartItem item = new CartItem(id, null, count, null, 0, productSizeId);
+                    items.add(item);
                 }
                 return items;
             } catch (Exception e) {
                 error = "Error: " + e.getMessage();
-                Log.e("CartContext", error);
+                Log.e("CartContext", error, e);
                 return null;
             }
         }
@@ -429,6 +443,44 @@ public class CartContext {
                 callback.onSuccess(items);
             } else {
                 callback.onError("Failed to load cart items");
+            }
+        }
+    }
+
+    private static class ClearCartTask extends AsyncTask<Void, Void, Boolean> {
+        private final String basketId;
+        private final UpdateCartCallback callback;
+        private String error;
+
+        ClearCartTask(String basketId, UpdateCartCallback callback) {
+            this.basketId = basketId;
+            this.callback = callback;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            try {
+                String url = BASKET_URL + "?basket_id=eq." + basketId;
+                Connection.Response response = Jsoup.connect(url)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .header("Prefer", "return=minimal")
+                        .method(Connection.Method.DELETE)
+                        .ignoreContentType(true)
+                        .execute();
+                return response.statusCode() == 204 || response.statusCode() == 200;
+            } catch (Exception e) {
+                error = e.getMessage();
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (success) {
+                callback.onSuccess();
+            } else {
+                callback.onError(error != null ? error : "Unknown error");
             }
         }
     }

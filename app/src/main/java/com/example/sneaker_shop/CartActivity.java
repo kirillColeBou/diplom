@@ -1,10 +1,11 @@
 package com.example.sneaker_shop;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -16,10 +17,14 @@ import java.util.List;
 public class CartActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private CartAdapter adapter;
-    private List<CartItem> cartItems;
-    private SwipeRefreshLayout swipeRefreshLayout;
+    public List<CartItem> cartItems;
+    public SwipeRefreshLayout swipeRefreshLayout;
     private LinearLayout emptyCartLayout;
+    private LinearLayout createOrderLayout;
+    private TextView totalPriceText;
+    private TextView addressText;
     private long currentUserId;
+    private boolean isRefreshing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,20 +34,27 @@ public class CartActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_view_cart);
         emptyCartLayout = findViewById(R.id.empty_cart);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        createOrderLayout = findViewById(R.id.create_order_layout);
+        totalPriceText = findViewById(R.id.total_price);
+        addressText = findViewById(R.id.address_receiving);
         cartItems = new ArrayList<>();
         adapter = new CartAdapter(cartItems, this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
         swipeRefreshLayout.setOnRefreshListener(this::loadCartItems);
         loadCartItems();
     }
 
+
     private void loadCartItems() {
+        if (isRefreshing) return;
+        isRefreshing = true;
         swipeRefreshLayout.setRefreshing(true);
         int selectedStoreId = PreferencesHelper.getSelectedStoreId(this);
         if (selectedStoreId == -1) {
             Toast.makeText(this, "Пожалуйста, выберите магазин", Toast.LENGTH_SHORT).show();
             swipeRefreshLayout.setRefreshing(false);
+            isRefreshing = false;
             checkEmptyState();
             return;
         }
@@ -59,8 +71,10 @@ public class CartActivity extends AppCompatActivity {
                                 cartItems.addAll(items);
                             }
                             adapter.updateItems(cartItems);
+                            updateOrderLayout();
                             checkEmptyState();
                             swipeRefreshLayout.setRefreshing(false);
+                            isRefreshing = false;
                         });
                     }
 
@@ -74,6 +88,7 @@ public class CartActivity extends AppCompatActivity {
                             adapter.updateItems(cartItems);
                             checkEmptyState();
                             swipeRefreshLayout.setRefreshing(false);
+                            isRefreshing = false;
                         });
                     }
                 });
@@ -89,20 +104,118 @@ public class CartActivity extends AppCompatActivity {
                     adapter.updateItems(cartItems);
                     checkEmptyState();
                     swipeRefreshLayout.setRefreshing(false);
+                    isRefreshing = false;
                 });
             }
         });
     }
 
     public void checkEmptyState() {
+        runOnUiThread(() -> {
+            if (cartItems == null || cartItems.isEmpty()) {
+                recyclerView.setVisibility(View.GONE);
+                emptyCartLayout.setVisibility(View.VISIBLE);
+                createOrderLayout.setVisibility(View.GONE);
+            } else {
+                recyclerView.setVisibility(View.VISIBLE);
+                emptyCartLayout.setVisibility(View.GONE);
+                createOrderLayout.setVisibility(View.VISIBLE);
+                updateOrderLayout();
+            }
+        });
+    }
+
+    public void updateOrderLayout() {
+        runOnUiThread(() -> {
+            double totalPrice = 0;
+            for (CartItem item : cartItems) {
+                totalPrice += item.getProduct().getPrice() * item.getCount();
+            }
+            totalPriceText.setText(String.format("%d ₽", (int) totalPrice));
+            String storeAddress = PreferencesHelper.getSelectedStoreAddress(this);
+            addressText.setText(storeAddress != null ? storeAddress : "Адрес не выбран");
+        });
+    }
+
+    public void onCreateOrder(View view) {
         if (cartItems == null || cartItems.isEmpty()) {
-            recyclerView.setVisibility(View.GONE);
-            emptyCartLayout.setVisibility(View.VISIBLE);
-        } else {
-            recyclerView.setVisibility(View.VISIBLE);
-            emptyCartLayout.setVisibility(View.GONE);
-            adapter.notifyDataSetChanged();
+            Toast.makeText(this, "Корзина пуста", Toast.LENGTH_SHORT).show();
+            return;
         }
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Оформление заказа...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        int storeId = PreferencesHelper.getSelectedStoreId(this);
+        if (storeId == -1) {
+            progressDialog.dismiss();
+            Toast.makeText(this, "Выберите магазин", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        double totalPrice = 0;
+        for (CartItem item : cartItems) {
+            totalPrice += item.getProduct().getPrice() * item.getCount();
+        }
+        OrderContext.createOrder(currentUserId, storeId, totalPrice, cartItems,
+                new OrderContext.OrderCallback() {
+                    @Override
+                    public void onSuccess(long orderId) {
+                        runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            Toast.makeText(CartActivity.this,
+                                    "Заказ #" + orderId + " успешно оформлен!",
+                                    Toast.LENGTH_LONG).show();
+                            clearCartAfterOrder();
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            Toast.makeText(CartActivity.this,
+                                    "Ошибка оформления заказа: " + error,
+                                    Toast.LENGTH_LONG).show();
+                        });
+                    }
+                });
+    }
+
+    private void clearCartAfterOrder() {
+        cartItems.clear();
+        adapter.updateItems(cartItems);
+        updateOrderLayout();
+        checkEmptyState();
+        CartContext.getUserBasket(currentUserId, new CartContext.BasketCallback() {
+            @Override
+            public void onSuccess(String basketId) {
+                String filter = "basket_id=eq." + basketId;
+                CartContext.loadSimpleCartItems(filter, new CartContext.LoadCartCallback() {
+                    @Override
+                    public void onSuccess(List<CartItem> items) {
+                        if (items != null && !items.isEmpty()) {
+                            for (CartItem item : items) {
+                                CartContext.removeFromCart(item.getId(), new CartContext.UpdateCartCallback() {
+                                    @Override
+                                    public void onSuccess() {}
+
+                                    @Override
+                                    public void onError(String error) {}
+                                });
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {}
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(CartActivity.this, "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public void onHome(View view) {

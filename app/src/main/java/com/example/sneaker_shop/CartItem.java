@@ -6,17 +6,27 @@ public class CartItem {
     private int count;
     private String size;
     private int availableQuantity;
+    private int productSizeId;
 
-    public CartItem(String id, Product product, int count, String size, int availableQuantity) {
+    public CartItem(String id, Product product, int count, String size, int availableQuantity, int productSizeId) {
         this.id = id;
         this.product = product;
         this.count = count;
         this.size = size;
         this.availableQuantity = availableQuantity;
+        this.productSizeId = productSizeId;
     }
 
     public String getId() {
         return id;
+    }
+
+    public int getProductSizeId() {
+        return productSizeId;
+    }
+
+    public void setProductSizeId(int productSizeId) {
+        this.productSizeId = productSizeId;
     }
 
     public Product getProduct() {
