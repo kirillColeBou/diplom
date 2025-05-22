@@ -116,6 +116,7 @@ public class MenuActivity extends AppCompatActivity {
 
     public void onLogout(View view) {
         AuthUtils.logout(this);
+        PreferencesHelper.clearSelectedStore(this);
         Intent intent = new Intent(this, AuthorizationActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

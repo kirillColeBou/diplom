@@ -2,11 +2,12 @@ package com.example.sneaker_shop;
 
 import android.os.AsyncTask;
 import android.util.Log;
+
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +53,10 @@ public class CartContext {
         new UpdateCartItemTask(itemId, newCount, callback).execute();
     }
 
+    public static void loadSimpleCartItems(String filter, LoadCartCallback callback) {
+        new LoadSimpleCartItemsTask(filter, callback).execute();
+    }
+
     private static class GetBasketTask extends AsyncTask<Void, Void, String> {
         private final long userUid;
         private final BasketCallback callback;
@@ -90,7 +95,6 @@ public class CartContext {
                 }
             } catch (Exception e) {
                 error = "Error: " + e.getMessage();
-                Log.e("CartContext", error);
                 return null;
             }
         }
@@ -108,6 +112,7 @@ public class CartContext {
     }
 
     private static class AddToBasketTask extends AsyncTask<Void, Void, Boolean> {
+        private static final int MAX_QUANTITY = 10;
         private final String basketId;
         private final String productSizeId;
         private final int quantity;
@@ -136,10 +141,33 @@ public class CartContext {
                         .ignoreContentType(true)
                         .get();
                 JSONArray items = new JSONArray(checkDoc.body().text());
+                int currentCount = 0;
+                String itemId = null;
                 if (items.length() > 0) {
                     JSONObject item = items.getJSONObject(0);
-                    String itemId = item.getString("id");
-                    int currentCount = item.getInt("count");
+                    itemId = item.getString("id");
+                    currentCount = item.getInt("count");
+                }
+                String stockUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/product_size?id=eq." + productSizeId + "&select=count";
+                Document stockDoc = Jsoup.connect(stockUrl)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .ignoreContentType(true)
+                        .get();
+                JSONArray stockArray = new JSONArray(stockDoc.body().text());
+                if (stockArray.length() == 0) {
+                    error = "Размер не найден";
+                    return false;
+                }
+                int availableStock = stockArray.getJSONObject(0).getInt("count");
+                int maxAllowed = Math.min(MAX_QUANTITY, availableStock);
+
+                if (currentCount + quantity > maxAllowed) {
+                    error = "Нельзя добавить больше " + maxAllowed + " единиц";
+                    return false;
+                }
+
+                if (items.length() > 0) {
                     JSONObject update = new JSONObject();
                     update.put("count", currentCount + quantity);
                     Jsoup.connect(BASKET_ITEMS_URL + "?id=eq." + itemId)
@@ -168,7 +196,6 @@ public class CartContext {
                 return true;
             } catch (Exception e) {
                 error = "Error: " + e.getMessage();
-                Log.e("CartContext", error);
                 return false;
             }
         }
@@ -198,35 +225,65 @@ public class CartContext {
         @Override
         protected List<CartItem> doInBackground(Void... voids) {
             try {
-                String url = BASKET_ITEMS_URL + "?" + filter;
-                Document doc = Jsoup.connect(url)
+                String basketItemsUrl = BASKET_ITEMS_URL + "?" + filter + "&select=id,count,product_size_id";
+                Document basketDoc = Jsoup.connect(basketItemsUrl)
                         .header("Authorization", TOKEN)
                         .header("apikey", SECRET)
                         .ignoreContentType(true)
                         .get();
-                JSONArray itemsArray = new JSONArray(doc.body().text());
+                JSONArray basketItemsArray = new JSONArray(basketDoc.body().text());
                 List<CartItem> items = new ArrayList<>();
-                for (int i = 0; i < itemsArray.length(); i++) {
-                    JSONObject itemObj = itemsArray.getJSONObject(i);
-                    JSONObject productSizeObj = itemObj.getJSONObject("product_size_id");
-                    JSONObject obj = productSizeObj.getJSONObject("products");
-                    Product product = new Product(
-                            obj.getInt("id"),
-                            obj.getString("name"),
-                            obj.getDouble("price"),
-                            obj.getString("description"),
-                            obj.getInt("category_id")
-                    );
-                    items.add(new CartItem(
-                            itemObj.getString("id"),
-                            product,
-                            itemObj.getInt("count")
-                    ));
+                for (int i = 0; i < basketItemsArray.length(); i++) {
+                    JSONObject itemObj = basketItemsArray.getJSONObject(i);
+                    int productSizeId = itemObj.getInt("product_size_id");
+                    int count = itemObj.getInt("count");
+                    String itemId = itemObj.getString("id");
+                    String productSizeUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/product_size?id=eq." + productSizeId + "&select=id,product_id,size_id,count,store_id";
+                    Document productSizeDoc = Jsoup.connect(productSizeUrl)
+                            .header("Authorization", TOKEN)
+                            .header("apikey", SECRET)
+                            .ignoreContentType(true)
+                            .get();
+                    JSONArray productSizeArray = new JSONArray(productSizeDoc.body().text());
+                    JSONObject productSizeObj = productSizeArray.getJSONObject(0);
+                    int productId = productSizeObj.getInt("product_id");
+                    int sizeId = productSizeObj.getInt("size_id");
+                    int availableQuantity = productSizeObj.optInt("count", 0);
+                    String productUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/products?id=eq." + productId + "&select=id,name,price,description,category_id";
+                    Document productDoc = Jsoup.connect(productUrl)
+                            .header("Authorization", TOKEN)
+                            .header("apikey", SECRET)
+                            .ignoreContentType(true)
+                            .get();
+                    JSONArray productArray = new JSONArray(productDoc.body().text());
+                    Product product = null;
+                    if (productArray.length() > 0) {
+                        JSONObject productObj = productArray.getJSONObject(0);
+                        product = new Product(
+                                productObj.getInt("id"),
+                                productObj.getString("name"),
+                                productObj.getDouble("price"),
+                                productObj.getString("description"),
+                                productObj.getInt("category_id")
+                        );
+                    }
+                    String sizeUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/sizes?id=eq." + sizeId + "&select=value";
+                    Document sizeDoc = Jsoup.connect(sizeUrl)
+                            .header("Authorization", TOKEN)
+                            .header("apikey", SECRET)
+                            .ignoreContentType(true)
+                            .get();
+                    JSONArray sizeArray = new JSONArray(sizeDoc.body().text());
+                    String sizeValue = "Unknown";
+                    if (sizeArray.length() > 0) {
+                        JSONObject sizeObj = sizeArray.getJSONObject(0);
+                        sizeValue = sizeObj.getString("value");
+                    }
+                    items.add(new CartItem(itemId, product, count, sizeValue, availableQuantity));
                 }
                 return items;
             } catch (Exception e) {
                 error = "Error: " + e.getMessage();
-                Log.e("CartContext", error);
                 return null;
             }
         }
@@ -271,7 +328,6 @@ public class CartContext {
                 return true;
             } catch (Exception e) {
                 error = "Error: " + e.getMessage();
-                Log.e("CartContext", error);
                 return false;
             }
         }
@@ -314,7 +370,6 @@ public class CartContext {
                 return true;
             } catch (Exception e) {
                 error = "Error: " + e.getMessage();
-                Log.e("CartContext", error);
                 return false;
             }
         }
@@ -327,6 +382,53 @@ public class CartContext {
                 callback.onSuccess();
             } else {
                 callback.onError("Failed to remove from cart");
+            }
+        }
+    }
+
+    private static class LoadSimpleCartItemsTask extends AsyncTask<Void, Void, List<CartItem>> {
+        private final String filter;
+        private final LoadCartCallback callback;
+        private String error;
+
+        LoadSimpleCartItemsTask(String filter, LoadCartCallback callback) {
+            this.filter = filter;
+            this.callback = callback;
+        }
+
+        @Override
+        protected List<CartItem> doInBackground(Void... voids) {
+            try {
+                String url = BASKET_ITEMS_URL + "?" + filter;
+                Document doc = Jsoup.connect(url)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .ignoreContentType(true)
+                        .get();
+                JSONArray itemsArray = new JSONArray(doc.body().text());
+                List<CartItem> items = new ArrayList<>();
+                for (int i = 0; i < itemsArray.length(); i++) {
+                    JSONObject itemObj = itemsArray.getJSONObject(i);
+                    String id = itemObj.getString("id");
+                    int count = itemObj.getInt("count");
+                    items.add(new CartItem(id, null, count, null, 0));
+                }
+                return items;
+            } catch (Exception e) {
+                error = "Error: " + e.getMessage();
+                Log.e("CartContext", error);
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<CartItem> items) {
+            if (error != null) {
+                callback.onError(error);
+            } else if (items != null) {
+                callback.onSuccess(items);
+            } else {
+                callback.onError("Failed to load cart items");
             }
         }
     }

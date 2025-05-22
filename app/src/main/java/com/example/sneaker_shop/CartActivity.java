@@ -2,6 +2,7 @@ package com.example.sneaker_shop;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -9,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CartActivity extends AppCompatActivity {
@@ -24,10 +26,11 @@ public class CartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.cart_activity);
         currentUserId = AuthUtils.getCurrentUserId(this);
-        recyclerView = findViewById(R.id.recycler_view_favorite);
+        recyclerView = findViewById(R.id.recycler_view_cart);
         emptyCartLayout = findViewById(R.id.empty_cart);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        cartItems = new ArrayList<>();
         adapter = new CartAdapter(cartItems, this);
         recyclerView.setAdapter(adapter);
         swipeRefreshLayout.setOnRefreshListener(this::loadCartItems);
@@ -37,19 +40,24 @@ public class CartActivity extends AppCompatActivity {
     private void loadCartItems() {
         swipeRefreshLayout.setRefreshing(true);
         int selectedStoreId = PreferencesHelper.getSelectedStoreId(this);
+        if (selectedStoreId == -1) {
+            Toast.makeText(this, "Пожалуйста, выберите магазин", Toast.LENGTH_SHORT).show();
+            swipeRefreshLayout.setRefreshing(false);
+            checkEmptyState();
+            return;
+        }
         CartContext.getUserBasket(currentUserId, new CartContext.BasketCallback() {
             @Override
             public void onSuccess(String basketId) {
-                String filter = "basket_id=eq." + basketId;
-                if (selectedStoreId != -1) {
-                    filter += "&store_id=eq." + selectedStoreId;
-                }
-                filter += "&select=id,count,product_size_id(*,products(*))";
+                String filter = "basket_id=eq." + basketId + "&store_id=eq." + selectedStoreId;
                 CartContext.loadCartItems(filter, new CartContext.LoadCartCallback() {
                     @Override
                     public void onSuccess(List<CartItem> items) {
                         runOnUiThread(() -> {
-                            cartItems = items;
+                            cartItems.clear();
+                            if (items != null) {
+                                cartItems.addAll(items);
+                            }
                             adapter.updateItems(cartItems);
                             checkEmptyState();
                             swipeRefreshLayout.setRefreshing(false);
@@ -62,6 +70,8 @@ public class CartActivity extends AppCompatActivity {
                             Toast.makeText(CartActivity.this,
                                     "Ошибка загрузки корзины: " + error,
                                     Toast.LENGTH_SHORT).show();
+                            cartItems.clear();
+                            adapter.updateItems(cartItems);
                             checkEmptyState();
                             swipeRefreshLayout.setRefreshing(false);
                         });
@@ -75,6 +85,8 @@ public class CartActivity extends AppCompatActivity {
                     Toast.makeText(CartActivity.this,
                             "Ошибка: " + error,
                             Toast.LENGTH_SHORT).show();
+                    cartItems.clear();
+                    adapter.updateItems(cartItems);
                     checkEmptyState();
                     swipeRefreshLayout.setRefreshing(false);
                 });
@@ -89,6 +101,7 @@ public class CartActivity extends AppCompatActivity {
         } else {
             recyclerView.setVisibility(View.VISIBLE);
             emptyCartLayout.setVisibility(View.GONE);
+            adapter.notifyDataSetChanged();
         }
     }
 

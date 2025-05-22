@@ -4,11 +4,15 @@ public class CartItem {
     private String id;
     private Product product;
     private int count;
+    private String size;
+    private int availableQuantity;
 
-    public CartItem(String id, Product product, int count) {
+    public CartItem(String id, Product product, int count, String size, int availableQuantity) {
         this.id = id;
         this.product = product;
         this.count = count;
+        this.size = size;
+        this.availableQuantity = availableQuantity;
     }
 
     public String getId() {
@@ -25,5 +29,21 @@ public class CartItem {
 
     public void setCount(int count) {
         this.count = count;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public int getAvailableQuantity() {
+        return availableQuantity;
+    }
+
+    public void setAvailableQuantity(int availableQuantity) {
+        this.availableQuantity = availableQuantity;
     }
 }
