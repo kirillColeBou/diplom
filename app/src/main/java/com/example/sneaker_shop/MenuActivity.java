@@ -114,6 +114,12 @@ public class MenuActivity extends AppCompatActivity {
         finish();
     }
 
+    public void onOrder(View view) {
+        startActivity(new Intent(this, OrderActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
+    }
+
     public void onLogout(View view) {
         AuthUtils.logout(this);
         PreferencesHelper.clearSelectedStore(this);

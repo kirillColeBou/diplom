@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -116,6 +117,71 @@ public class OrderContext {
                 callback.onError(error != null ? error : "Не удалось создать заказ");
             } else {
                 callback.onSuccess(orderId);
+            }
+        }
+    }
+
+    public interface LoadOrdersCallback {
+        void onSuccess(List<Order> orders);
+        void onError(String error);
+    }
+
+    public static void loadUserOrders(long userId, LoadOrdersCallback callback) {
+        new LoadOrdersTask(userId, callback).execute();
+    }
+
+    private static class LoadOrdersTask extends AsyncTask<Void, Void, List<Order>> {
+        private final long userId;
+        private final LoadOrdersCallback callback;
+        private String error;
+
+        LoadOrdersTask(long userId, LoadOrdersCallback callback) {
+            this.userId = userId;
+            this.callback = callback;
+        }
+
+        @Override
+        protected List<Order> doInBackground(Void... voids) {
+            List<Order> orders = new ArrayList<>();
+            try {
+                String filter = "user_uid=eq." + userId + "&select=*,order_items(count,product_size_id)";
+                Connection.Response response = Jsoup.connect(ORDERS_URL + "?" + filter)
+                        .header("Authorization", TOKEN)
+                        .header("apikey", SECRET)
+                        .ignoreContentType(true)
+                        .method(Connection.Method.GET)
+                        .execute();
+                JSONArray ordersArray = new JSONArray(response.body());
+                for (int i = 0; i < ordersArray.length(); i++) {
+                    JSONObject orderJson = ordersArray.getJSONObject(i);
+                    long id = orderJson.getLong("id");
+                    String date = orderJson.getString("order_date");
+                    String status = orderJson.getString("status");
+                    double totalPrice = orderJson.getDouble("total_price");
+                    int itemCount = 0;
+                    if (orderJson.has("order_items")) {
+                        JSONArray itemsArray = orderJson.getJSONArray("order_items");
+                        for (int j = 0; j < itemsArray.length(); j++) {
+                            JSONObject item = itemsArray.getJSONObject(j);
+                            itemCount += item.getInt("count");
+                        }
+                    }
+                    orders.add(new Order(id, date, status, totalPrice, itemCount));
+                }
+                return orders;
+            } catch (Exception e) {
+                error = "Error: " + e.getMessage();
+                Log.e("OrderError", error, e);
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<Order> orders) {
+            if (error != null || orders == null) {
+                callback.onError(error != null ? error : "Не удалось загрузить заказы");
+            } else {
+                callback.onSuccess(orders);
             }
         }
     }
