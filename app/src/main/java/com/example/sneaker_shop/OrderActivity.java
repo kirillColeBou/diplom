@@ -33,10 +33,25 @@ public class OrderActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         swipeRefreshLayout.setOnRefreshListener(this::loadOrders);
         loadOrders();
+        if (getIntent().getBooleanExtra("refreshOrders", false)) {
+            loadOrders();
+        } else {
+            loadOrders();
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent.getBooleanExtra("refreshOrders", false)) {
+            loadOrders();
+        }
     }
 
     private void loadOrders() {
         progressBar.setVisibility(View.VISIBLE);
+        swipeRefreshLayout.setRefreshing(true);
         OrderContext.loadUserOrders(currentUserId, new OrderContext.LoadOrdersCallback() {
             @Override
             public void onSuccess(List<Order> loadedOrders) {

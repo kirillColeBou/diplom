@@ -1,5 +1,7 @@
 package com.example.sneaker_shop;
 
+import android.content.Intent;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,12 +33,24 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         holder.orderDate.setText(order.getFormattedDate());
         holder.itemCount.setText(String.format(Locale.getDefault(), "Товаров: %d", order.getItemCount()));
         holder.totalPrice.setText(String.format(Locale.getDefault(), "%.0f ₽", order.getTotalPrice()));
+        if ("Ожидает получения".equals(order.getStatus())) {
+            holder.orderStatus.setTypeface(holder.orderStatus.getTypeface(), Typeface.BOLD);
+        } else {
+            holder.orderStatus.setTypeface(Typeface.DEFAULT, Typeface.NORMAL);
+        }
         holder.orderStatus.setText(String.format("Статус: %s", order.getStatus()));
+        holder.itemView.setOnClickListener(v -> {
+            if (!"Отменён".equals(order.getStatus())) {
+                Intent intent = new Intent(holder.itemView.getContext(), OrderInfoActivity.class);
+                intent.putExtra("orderId", order.getId());
+                holder.itemView.getContext().startActivity(intent);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return orderList.size();
+        return orderList != null ? orderList.size() : 0;
     }
 
     public static class OrderViewHolder extends RecyclerView.ViewHolder {

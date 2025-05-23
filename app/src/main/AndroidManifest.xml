@@ -10,7 +10,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:requestLegacyExternalStorage="true"
         android:allowBackup="true"
@@ -23,6 +23,9 @@
         android:theme="@style/Theme.Sneaker_shop"
         android:exported="false"
         tools:targetApi="31">
+        <service
+            android:name="androidx.work.impl.background.systemalarm.SystemAlarmService"
+            android:directBootAware="false"/>
         <activity
             android:name=".SplashActivity"
             android:exported="true">
@@ -47,5 +50,6 @@
         <activity android:name=".ForgotPasswordActivity"/>
         <activity android:name=".MapActivity"/>
         <activity android:name=".OrderActivity"/>
+        <activity android:name=".OrderInfoActivity"/>
     </application>
 </manifest>

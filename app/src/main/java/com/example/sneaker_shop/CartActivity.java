@@ -156,7 +156,7 @@ public class CartActivity extends AppCompatActivity {
         for (CartItem item : cartItems) {
             totalPrice += item.getProduct().getPrice() * item.getCount();
         }
-        OrderContext.createOrder(currentUserId, storeId, totalPrice, cartItems,
+        OrderContext.createOrder(this, currentUserId, storeId, totalPrice, cartItems,
                 new OrderContext.OrderCallback() {
                     @Override
                     public void onSuccess(long orderId) {
