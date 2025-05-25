@@ -203,16 +203,20 @@ public class PersonActivity extends AppCompatActivity {
     public void onEditPhoto(View view) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.READ_MEDIA_IMAGES},
+                    != PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                            != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.CAMERA},
                         PERMISSION_REQUEST_CODE);
             } else {
                 showImagePickerDialog();
             }
         } else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    != PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                            != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA},
                         PERMISSION_REQUEST_CODE);
             } else {
                 showImagePickerDialog();
@@ -238,6 +242,7 @@ public class PersonActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK) {
+            Toast.makeText(this, "Операция отменена", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
@@ -252,9 +257,15 @@ public class PersonActivity extends AppCompatActivity {
                     }
                 } else if (data != null && data.getExtras() != null) {
                     bitmap = (Bitmap) data.getExtras().get("data");
+                    if (bitmap == null) {
+                        Toast.makeText(this, "Не удалось получить изображение с камеры", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } else {
+                    Toast.makeText(this, "Данные изображения отсутствуют", Toast.LENGTH_SHORT).show();
+                    return;
                 }
             }
-
             if (bitmap != null) {
                 bitmap = getResizedBitmap(bitmap, 800);
                 profileImageView.setImageBitmap(bitmap);
@@ -339,17 +350,24 @@ public class PersonActivity extends AppCompatActivity {
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            boolean allPermissionsGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+            if (allPermissionsGranted) {
                 showImagePickerDialog();
             } else {
-                if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) ||
+                        !ActivityCompat.shouldShowRequestPermissionRationale(this,
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
+                                        Manifest.permission.READ_MEDIA_IMAGES :
+                                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
                     showPermissionSettingsDialog();
                 } else {
-                    Toast.makeText(this,
-                            "Доступ к хранилищу отклонен",
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Доступ к камере или хранилищу отклонен", Toast.LENGTH_SHORT).show();
                 }
             }
         }

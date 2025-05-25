@@ -211,7 +211,7 @@
                     <ImageView
                         android:layout_width="28dp"
                         android:layout_height="28dp"
-                        android:src="@drawable/cart_menu"/>
+                        android:src="@drawable/order_menu"/>
 
                     <TextView
                         android:layout_width="wrap_content"

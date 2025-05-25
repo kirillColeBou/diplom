@@ -2,11 +2,15 @@ package com.example.sneaker_shop;
 
 import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +29,8 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
+
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -92,6 +98,8 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
         contentScrollView.setVisibility(View.INVISIBLE);
         btnAddCart = findViewById(R.id.btnAddCart);
         deleteButton = findViewById(R.id.delete_button);
+        imagesAdapter = new ProductImagesAdapter(new ArrayList<>());
+        productImagesPager.setAdapter(imagesAdapter);
     }
 
     private void setupProgressBar() {
@@ -183,50 +191,76 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     private void loadProductImages(int productId) {
-        ImageContext.loadImagesForProduct(productId, new ImageContext.ImagesCallback() {
+        ImageContext.loadImagesForProduct(this, productId, new ImageContext.ImagesCallback() {
             @Override
             public void onSuccess(List<String> images) {
                 runOnUiThread(() -> {
                     productImages.clear();
-                    productImages.addAll(images.isEmpty() ? Collections.singletonList("") : images);
+
+                    // Добавляем все полученные изображения
+                    if (images != null && !images.isEmpty()) {
+                        productImages.addAll(images);
+                    }
+
+                    // Дополняем до 3 изображений, если нужно
+                    while (productImages.size() < 3) {
+                        productImages.add(""); // Пустая строка для заглушки
+                    }
+
+                    imagesAdapter.updateImages(productImages);
                     setupImagesPager();
-                    productImagesPager.setCurrentItem(0, false);
-                    updateImagesIndicator(0);
                 });
             }
 
             @Override
             public void onError(String error) {
+                Log.e("ProductInfo", "Image load error: " + error);
                 runOnUiThread(() -> {
                     productImages.clear();
+                    // Заглушки если ошибка
                     productImages.add("");
+                    productImages.add("");
+                    productImages.add("");
+                    imagesAdapter.updateImages(productImages);
                     setupImagesPager();
-                    productImagesPager.setCurrentItem(0, false);
-                    updateImagesIndicator(0);
                 });
             }
         });
     }
 
+    private void cacheImage(int productId, int index, String imageData) {
+        try {
+            String base64Image = imageData.startsWith("data:image") ?
+                    imageData.split(",")[1] : imageData;
+            byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            if (decodedByte != null) {
+                String cacheKey = "product_" + productId + "_" + index;
+                ImageCacheManager cacheManager = ImageCacheManager.getInstance(this);
+                cacheManager.addBitmapToMemoryCache(cacheKey, decodedByte);
+                cacheManager.addBitmapToDiskCache(cacheKey, decodedByte);
+            }
+        } catch (Exception e) {
+            Log.e("ProductInfoActivity", "Ошибка кэширования изображения: " + e.getMessage());
+        }
+    }
+
+    private String bitmapToBase64(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+    }
+
     private void setupImagesPager() {
-        if (productImages.isEmpty() || productImages.contains("")) {
-            productImages.clear();
-            productImages.add("");
-        }
-        if (imagesAdapter == null) {
-            imagesAdapter = new ProductImagesAdapter(productImages);
-            productImagesPager.setAdapter(imagesAdapter);
-            productImagesPager.setOffscreenPageLimit(1);
-            productImagesPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-                @Override
-                public void onPageSelected(int position) {
-                    super.onPageSelected(position);
-                    updateImagesIndicator(position);
-                }
-            });
-        } else {
-            imagesAdapter.updateImages(productImages);
-        }
+        productImagesPager.setOffscreenPageLimit(1);
+        productImagesPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                updateImagesIndicator(position);
+            }
+        });
         setupImagesIndicator();
     }
 
@@ -236,7 +270,8 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             int selectedSize = getResources().getDimensionPixelSize(R.dimen.dot_selected_size);
             int unselectedSize = getResources().getDimensionPixelSize(R.dimen.dot_unselected_size);
             int margin = getResources().getDimensionPixelSize(R.dimen.dot_margin);
-            for (int i = 0; i < productImages.size(); i++) {
+            int imageCount = imagesAdapter != null ? imagesAdapter.getItemCount() : 0;
+            for (int i = 0; i < imageCount; i++) {
                 View dot = new View(this);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                         unselectedSize,
@@ -248,7 +283,7 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                 dot.setBackground(getResources().getDrawable(R.drawable.dot_unselected));
                 imagesIndicator.addView(dot);
             }
-            if (!productImages.isEmpty()) {
+            if (imageCount > 0) {
                 updateImagesIndicator(0);
             }
         });

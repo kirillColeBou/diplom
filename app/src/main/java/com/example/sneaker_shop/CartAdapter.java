@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,16 +58,35 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     }
 
     private void loadProductImage(int productId, ImageView imageView) {
-        ImageContext.loadImagesForProduct(productId, new ImageContext.ImagesCallback() {
+        String cacheKey = "product_" + productId + "_0";
+        ImageCacheManager cacheManager = ImageCacheManager.getInstance(context);
+        Bitmap cachedBitmap = cacheManager.getBitmapFromMemoryCache(cacheKey);
+        if (cachedBitmap != null) {
+            imageView.setImageBitmap(cachedBitmap);
+            Log.d("CartAdapter", "Изображение загружено из кэша памяти: " + cacheKey);
+            return;
+        }
+        cachedBitmap = cacheManager.getBitmapFromDiskCache(cacheKey);
+        if (cachedBitmap != null) {
+            cacheManager.addBitmapToMemoryCache(cacheKey, cachedBitmap);
+            imageView.setImageBitmap(cachedBitmap);
+            Log.d("CartAdapter", "Изображение загружено из кэша на диске: " + cacheKey);
+            return;
+        }
+        ImageContext.loadImagesForProduct(context, productId, new ImageContext.ImagesCallback() {
             @Override
             public void onSuccess(List<String> images) {
-                if (images != null && !images.isEmpty()) {
+                if (images != null && !images.isEmpty() && !images.get(0).isEmpty()) {
                     try {
                         String base64Image = images.get(0).split(",")[1];
                         byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
                         Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
                         imageView.setImageBitmap(decodedByte);
+                        cacheManager.addBitmapToMemoryCache(cacheKey, decodedByte);
+                        cacheManager.addBitmapToDiskCache(cacheKey, decodedByte);
+                        Log.d("CartAdapter", "Изображение загружено из сети и закэшировано: " + cacheKey);
                     } catch (Exception e) {
+                        Log.e("CartAdapter", "Ошибка декодирования изображения", e);
                         imageView.setImageResource(R.drawable.nike_air_force);
                     }
                 } else {
@@ -76,6 +96,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
             @Override
             public void onError(String error) {
+                Log.e("CartAdapter", "Ошибка загрузки изображений: " + error);
                 imageView.setImageResource(R.drawable.nike_air_force);
             }
         });

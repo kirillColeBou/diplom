@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/background_alert_dialog"
+    android:gravity="center">
+
+    <ProgressBar
+        android:id="@+id/custom_progress_bar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:indeterminate="true"
+        android:indeterminateTint="#9D3A4A"
+        android:indeterminateTintMode="src_in"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Оформление заказа..."
+        android:textSize="16sp"
+        android:textColor="#2B2B2B" />
+
+</LinearLayout>

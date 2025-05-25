@@ -52,30 +52,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
         Product product = favoriteProducts.get(position);
         holder.nameProduct.setText(product.getName());
         holder.priceProduct.setText(String.format("%d ₽", (int) product.getPrice()));
-        ImageContext.loadImagesForProduct(product.getId(), new ImageContext.ImagesCallback() {
-            @Override
-            public void onSuccess(List<String> images) {
-                if (images != null && !images.isEmpty()) {
-                    try {
-                        String base64Image = images.get(0).split(",")[1];
-                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        holder.imageProduct.setImageBitmap(decodedByte);
-                    } catch (Exception e) {
-                        Log.e("ProductAdapter", "Error loading image", e);
-                        holder.imageProduct.setImageResource(R.drawable.nike_air_force);
-                    }
-                } else {
-                    holder.imageProduct.setImageResource(R.drawable.nike_air_force);
-                }
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e("ProductAdapter", "Error loading images: " + error);
-                holder.imageProduct.setImageResource(R.drawable.nike_air_force);
-            }
-        });
+        loadProductImage(product.getId(), holder.imageProduct);
         holder.favoriteIcon.setVisibility(View.GONE);
         holder.moreFavorite.setVisibility(View.VISIBLE);
         holder.itemView.setOnClickListener(v -> {
@@ -86,6 +63,51 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
         holder.moreFavorite.setOnClickListener(v -> {
             if (moreClickListener != null) {
                 moreClickListener.onMoreClick(holder.getAdapterPosition());
+            }
+        });
+    }
+
+    private void loadProductImage(int productId, ImageView imageView) {
+        String cacheKey = "product_" + productId + "_0";
+        ImageCacheManager cacheManager = ImageCacheManager.getInstance(context);
+        Bitmap cachedBitmap = cacheManager.getBitmapFromMemoryCache(cacheKey);
+        if (cachedBitmap != null) {
+            imageView.setImageBitmap(cachedBitmap);
+            Log.d("FavoriteAdapter", "Изображение загружено из кэша памяти: " + cacheKey);
+            return;
+        }
+        cachedBitmap = cacheManager.getBitmapFromDiskCache(cacheKey);
+        if (cachedBitmap != null) {
+            cacheManager.addBitmapToMemoryCache(cacheKey, cachedBitmap);
+            imageView.setImageBitmap(cachedBitmap);
+            Log.d("FavoriteAdapter", "Изображение загружено из кэша на диске: " + cacheKey);
+            return;
+        }
+        ImageContext.loadImagesForProduct(context, productId, new ImageContext.ImagesCallback() {
+            @Override
+            public void onSuccess(List<String> images) {
+                if (images != null && !images.isEmpty() && !images.get(0).isEmpty()) {
+                    try {
+                        String base64Image = images.get(0).split(",")[1];
+                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        imageView.setImageBitmap(decodedByte);
+                        cacheManager.addBitmapToMemoryCache(cacheKey, decodedByte);
+                        cacheManager.addBitmapToDiskCache(cacheKey, decodedByte);
+                        Log.d("FavoriteAdapter", "Изображение загружено из сети и закэшировано: " + cacheKey);
+                    } catch (Exception e) {
+                        Log.e("FavoriteAdapter", "Ошибка декодирования изображения", e);
+                        imageView.setImageResource(R.drawable.nike_air_force);
+                    }
+                } else {
+                    imageView.setImageResource(R.drawable.nike_air_force);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("FavoriteAdapter", "Ошибка загрузки изображений: " + error);
+                imageView.setImageResource(R.drawable.nike_air_force);
             }
         });
     }

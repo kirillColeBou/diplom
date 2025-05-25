@@ -1,12 +1,14 @@
 package com.example.sneaker_shop;
 
-import android.app.ProgressDialog;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,6 +27,7 @@ public class CartActivity extends AppCompatActivity {
     private TextView addressText;
     private long currentUserId;
     private boolean isRefreshing = false;
+    private AlertDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,10 +44,21 @@ public class CartActivity extends AppCompatActivity {
         adapter = new CartAdapter(cartItems, this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+        int bottomMargin = (int) (10 * getResources().getDisplayMetrics().density);
+        recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(@NonNull Rect outRect, @NonNull View view,
+                                       @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                int position = parent.getChildAdapterPosition(view);
+                int itemCount = parent.getAdapter() != null ? parent.getAdapter().getItemCount() : 0;
+                if (position == itemCount - 1) {
+                    outRect.bottom = bottomMargin;
+                }
+            }
+        });
         swipeRefreshLayout.setOnRefreshListener(this::loadCartItems);
         loadCartItems();
     }
-
 
     private void loadCartItems() {
         if (isRefreshing) return;
@@ -142,9 +156,12 @@ public class CartActivity extends AppCompatActivity {
             Toast.makeText(this, "Корзина пуста", Toast.LENGTH_SHORT).show();
             return;
         }
-        ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Оформление заказа...");
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.custom_progress_bar_dialog, null);
+        builder.setView(dialogView);
+        progressDialog = builder.create();
         progressDialog.setCancelable(false);
+        progressDialog.setCanceledOnTouchOutside(false);
         progressDialog.show();
         int storeId = PreferencesHelper.getSelectedStoreId(this);
         if (storeId == -1) {
@@ -161,10 +178,10 @@ public class CartActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(long orderId) {
                         runOnUiThread(() -> {
-                            progressDialog.dismiss();
-                            Toast.makeText(CartActivity.this,
-                                    "Заказ #" + orderId + " успешно оформлен!",
-                                    Toast.LENGTH_LONG).show();
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
+                            showOrderSuccessDialog(orderId);
                             clearCartAfterOrder();
                         });
                     }
@@ -172,13 +189,33 @@ public class CartActivity extends AppCompatActivity {
                     @Override
                     public void onError(String error) {
                         runOnUiThread(() -> {
-                            progressDialog.dismiss();
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
                             Toast.makeText(CartActivity.this,
                                     "Ошибка оформления заказа: " + error,
                                     Toast.LENGTH_LONG).show();
                         });
                     }
                 });
+    }
+
+    private void showOrderSuccessDialog(long orderId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.alert_dialog_create_order, null);
+        builder.setView(dialogView);
+        TextView messageText = dialogView.findViewById(R.id.message);
+        String storeAddress = PreferencesHelper.getSelectedStoreAddress(this);
+        messageText.setText(String.format("Заказ №%d можно будет получить в магазине %s",
+                orderId, storeAddress != null ? storeAddress : "по выбранному адресу"));
+        AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(true);
+        LinearLayout dialogLayout = dialogView.findViewById(android.R.id.content);
+        if (dialogLayout == null) {
+            dialogLayout = (LinearLayout) dialogView;
+        }
+        dialogLayout.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void clearCartAfterOrder() {
@@ -240,5 +277,13 @@ public class CartActivity extends AppCompatActivity {
         startActivity(new Intent(this, PersonActivity.class));
         overridePendingTransition(0, 0);
         finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
     }
 }

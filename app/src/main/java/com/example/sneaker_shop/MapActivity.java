@@ -6,6 +6,7 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.PointF;
 import android.location.Location;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -183,7 +184,7 @@ public class MapActivity extends AppCompatActivity {
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
-        locationRequest.setNumUpdates(1);
+        locationRequest.setNumUpdates(3);
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -194,7 +195,12 @@ public class MapActivity extends AppCompatActivity {
                     if (location != null) {
                         locationFound = true;
                         Point userLocation = new Point(location.getLatitude(), location.getLongitude());
-                        moveCameraToLocation(userLocation);
+                        if (isValidLocation(userLocation)) {
+                            moveCameraToLocation(userLocation);
+                        } else {
+                            Log.w("MapActivity", "Invalid location received: " + location.getLatitude() + ", " + location.getLongitude());
+                            showDefaultLocation();
+                        }
                         fusedLocationClient.removeLocationUpdates(this);
                         break;
                     }
@@ -211,8 +217,11 @@ public class MapActivity extends AppCompatActivity {
                     Log.d("MapActivity", "Location request timed out");
                     fusedLocationClient.removeLocationUpdates(locationCallback);
                     showDefaultLocation();
+                    Toast.makeText(MapActivity.this, "Не удалось определить местоположение. Проверьте GPS и интернет-соединение.", Toast.LENGTH_LONG).show();
                 }
-            }, 15000);
+            }, 30000);
+        } else {
+            showDefaultLocation();
         }
     }
 
@@ -240,11 +249,9 @@ public class MapActivity extends AppCompatActivity {
     }
 
     private boolean isValidLocation(Point point) {
-        if (point.getLatitude() == 0 || point.getLongitude() == 0) {
-            return false;
-        }
-        return point.getLatitude() > 40 && point.getLatitude() < 80 &&
-                point.getLongitude() > 20 && point.getLongitude() < 180;
+        return point.getLatitude() != 0 && point.getLongitude() != 0 &&
+                point.getLatitude() >= -90 && point.getLatitude() <= 90 &&
+                point.getLongitude() >= -180 && point.getLongitude() <= 180;
     }
 
     private void showDefaultLocation() {
@@ -270,9 +277,18 @@ public class MapActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLastKnownLocation();
+                checkLocationSettings();
             } else {
-                showDefaultLocation();
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    Toast.makeText(this, "Разрешение на геолокацию отклонено. Включите его в настройках приложения.", Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(this, "Разрешение на геолокацию отклонено", Toast.LENGTH_LONG).show();
+                    showDefaultLocation();
+                }
             }
         }
     }

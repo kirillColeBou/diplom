@@ -70,14 +70,38 @@
                     android:layout_height="match_parent"
                     android:layout_marginTop="15dp"
                     android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"/>
+                    android:layout_marginRight="20dp"
+                    android:layout_marginBottom="50dp"/>
 
-                <ProgressBar
-                    android:id="@+id/progressBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:visibility="gone"/>
+                <LinearLayout
+                    android:id="@+id/empty_order_item"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="32dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Заказов нет"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#2B2B2B"
+                        android:layout_gravity="center_horizontal"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Но вы всего можете сделать его!"
+                        android:textSize="16sp"
+                        android:layout_marginTop="8dp"
+                        android:textColor="#2B2B2B"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"/>
+
+                </LinearLayout>
 
             </RelativeLayout>
 

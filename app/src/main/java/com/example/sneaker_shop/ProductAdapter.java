@@ -47,30 +47,48 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         Product product = productList.get(position);
         holder.nameProduct.setText(product.getName());
         holder.priceProduct.setText(String.format(Locale.getDefault(), "%.2f ₽", product.getPrice()));
-        ImageContext.loadImagesForProduct(product.getId(), new ImageContext.ImagesCallback() {
-            @Override
-            public void onSuccess(List<String> images) {
-                if (images != null && !images.isEmpty()) {
-                    try {
-                        String base64Image = images.get(0).split(",")[1];
-                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        holder.imageProduct.setImageBitmap(decodedByte);
-                    } catch (Exception e) {
-                        Log.e("ProductAdapter", "Error loading image", e);
+        String cacheKey = "product_" + product.getId() + "_0";
+        ImageCacheManager cacheManager = ImageCacheManager.getInstance(context);
+        Bitmap cachedBitmap = cacheManager.getBitmapFromMemoryCache(cacheKey);
+        if (cachedBitmap != null) {
+            holder.imageProduct.setImageBitmap(cachedBitmap);
+            Log.d("ProductAdapter", "Image loaded from memory cache: " + cacheKey);
+        } else {
+            cachedBitmap = cacheManager.getBitmapFromDiskCache(cacheKey);
+            if (cachedBitmap != null) {
+                cacheManager.addBitmapToMemoryCache(cacheKey, cachedBitmap);
+                holder.imageProduct.setImageBitmap(cachedBitmap);
+                Log.d("ProductAdapter", "Image loaded from disk cache: " + cacheKey);
+            } else {
+                ImageContext.loadImagesForProduct(context, product.getId(), new ImageContext.ImagesCallback() {
+                    @Override
+                    public void onSuccess(List<String> images) {
+                        if (images != null && !images.isEmpty() && !images.get(0).isEmpty()) {
+                            try {
+                                String base64Image = images.get(0).split(",")[1];
+                                byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                                holder.imageProduct.setImageBitmap(decodedByte);
+                                cacheManager.addBitmapToMemoryCache(cacheKey, decodedByte);
+                                cacheManager.addBitmapToDiskCache(cacheKey, decodedByte);
+                                Log.d("ProductAdapter", "Image loaded from network and cached: " + cacheKey);
+                            } catch (Exception e) {
+                                Log.e("ProductAdapter", "Error loading image", e);
+                                holder.imageProduct.setImageResource(R.drawable.nike_air_force);
+                            }
+                        } else {
+                            holder.imageProduct.setImageResource(R.drawable.nike_air_force);
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e("ProductAdapter", "Error loading images: " + error);
                         holder.imageProduct.setImageResource(R.drawable.nike_air_force);
                     }
-                } else {
-                    holder.imageProduct.setImageResource(R.drawable.nike_air_force);
-                }
+                });
             }
-
-            @Override
-            public void onError(String error) {
-                Log.e("ProductAdapter", "Error loading images: " + error);
-                holder.imageProduct.setImageResource(R.drawable.nike_air_force);
-            }
-        });
+        }
         FavoriteContext.checkFavorite(currentUserId, String.valueOf(product.getId()), new FavoriteContext.FavoriteCallback() {
             @Override
             public void onSuccess(boolean isFavorite) {
@@ -128,16 +146,19 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             int currentPosition = holder.getAdapterPosition();
             if (currentPosition != RecyclerView.NO_POSITION) {
                 Product clickedProduct = productList.get(currentPosition);
+                Log.d("ProductAdapter", "Item clicked: " + clickedProduct.getName() + " at position " + currentPosition);
                 Intent intent = new Intent(context, ProductInfoActivity.class);
                 intent.putExtra("product", clickedProduct);
                 context.startActivity(intent);
+            } else {
+                Log.w("ProductAdapter", "Invalid position on item click: " + currentPosition);
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return productList.size();
+        return productList != null ? productList.size() : 0;
     }
 
     public static class ProductViewHolder extends RecyclerView.ViewHolder {

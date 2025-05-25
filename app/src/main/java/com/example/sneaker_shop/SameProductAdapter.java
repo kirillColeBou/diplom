@@ -57,30 +57,7 @@ public class SameProductAdapter extends RecyclerView.Adapter<SameProductAdapter.
                         R.drawable.background_same_sneaker_select :
                         R.drawable.background_same_sneaker
         );
-        ImageContext.loadImagesForProduct(product.getId(), new ImageContext.ImagesCallback() {
-            @Override
-            public void onSuccess(List<String> images) {
-                if (images != null && !images.isEmpty()) {
-                    try {
-                        String base64Image = images.get(0).split(",")[1];
-                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        holder.imageSneaker.setImageBitmap(decodedByte);
-                    } catch (Exception e) {
-                        Log.e("ProductAdapter", "Error loading image", e);
-                        holder.imageSneaker.setImageResource(R.drawable.nike_air_force);
-                    }
-                } else {
-                    holder.imageSneaker.setImageResource(R.drawable.nike_air_force);
-                }
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e("ProductAdapter", "Error loading images: " + error);
-                holder.imageSneaker.setImageResource(R.drawable.nike_air_force);
-            }
-        });
+        loadProductImage(product.getId(), holder.imageSneaker);
         holder.itemView.setOnClickListener(v -> {
             if (itemClickListener != null) {
                 v.animate()
@@ -100,6 +77,51 @@ public class SameProductAdapter extends RecyclerView.Adapter<SameProductAdapter.
         });
     }
 
+    private void loadProductImage(int productId, ImageView imageView) {
+        String cacheKey = "product_" + productId + "_0";
+        ImageCacheManager cacheManager = ImageCacheManager.getInstance(context);
+        Bitmap cachedBitmap = cacheManager.getBitmapFromMemoryCache(cacheKey);
+        if (cachedBitmap != null) {
+            imageView.setImageBitmap(cachedBitmap);
+            Log.d("SameProductAdapter", "Изображение загружено из кэша памяти: " + cacheKey);
+            return;
+        }
+        cachedBitmap = cacheManager.getBitmapFromDiskCache(cacheKey);
+        if (cachedBitmap != null) {
+            cacheManager.addBitmapToMemoryCache(cacheKey, cachedBitmap);
+            imageView.setImageBitmap(cachedBitmap);
+            Log.d("SameProductAdapter", "Изображение загружено из кэша на диске: " + cacheKey);
+            return;
+        }
+        ImageContext.loadImagesForProduct(context, productId, new ImageContext.ImagesCallback() {
+            @Override
+            public void onSuccess(List<String> images) {
+                if (images != null && !images.isEmpty() && !images.get(0).isEmpty()) {
+                    try {
+                        String base64Image = images.get(0).split(",")[1];
+                        byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        imageView.setImageBitmap(decodedByte);
+                        // Кэшируем Bitmap
+                        cacheManager.addBitmapToMemoryCache(cacheKey, decodedByte);
+                        cacheManager.addBitmapToDiskCache(cacheKey, decodedByte);
+                        Log.d("SameProductAdapter", "Изображение загружено из сети и закэшировано: " + cacheKey);
+                    } catch (Exception e) {
+                        Log.e("SameProductAdapter", "Ошибка декодирования изображения", e);
+                        imageView.setImageResource(R.drawable.nike_air_force);
+                    }
+                } else {
+                    imageView.setImageResource(R.drawable.nike_air_force);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("SameProductAdapter", "Ошибка загрузки изображений: " + error);
+                imageView.setImageResource(R.drawable.nike_air_force);
+            }
+        });
+    }
 
     public void updateProducts(List<Product> newProducts) {
         this.products = newProducts;
@@ -108,7 +130,7 @@ public class SameProductAdapter extends RecyclerView.Adapter<SameProductAdapter.
 
     @Override
     public int getItemCount() {
-        return products.size();
+        return products != null ? products.size() : 0;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
