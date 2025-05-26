@@ -86,7 +86,7 @@ public class AuthorizationActivity extends AppCompatActivity {
             public void onError(String error) {
                 runOnUiThread(() ->
                         Toast.makeText(AuthorizationActivity.this,
-                                "Ошибка соединения: " + error, Toast.LENGTH_SHORT).show());
+                                "Проверьте подключение к интернету.", Toast.LENGTH_SHORT).show());
             }
         });
     }

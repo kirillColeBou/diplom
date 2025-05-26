@@ -72,7 +72,7 @@ public class MenuActivity extends AppCompatActivity {
             if (result != null && result.length() > 0) {
                 try {
                     String login = result.getJSONObject(0).optString("login", "");
-                    loginTextView.setText(login.isEmpty() ? "Пользователь" : login);
+                    loginTextView.setText(login.isEmpty() || login.equals("null") ? "Пользователь" : login);
                     String imageBase64 = result.getJSONObject(0).optString("image", null);
                     if (imageBase64 != null && !imageBase64.isEmpty() && !imageBase64.equals("null")) {
                         byte[] decodedString = Base64.decode(imageBase64, Base64.DEFAULT);

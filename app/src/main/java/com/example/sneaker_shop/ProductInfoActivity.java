@@ -196,17 +196,12 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
             public void onSuccess(List<String> images) {
                 runOnUiThread(() -> {
                     productImages.clear();
-
-                    // Добавляем все полученные изображения
                     if (images != null && !images.isEmpty()) {
                         productImages.addAll(images);
                     }
-
-                    // Дополняем до 3 изображений, если нужно
                     while (productImages.size() < 3) {
-                        productImages.add(""); // Пустая строка для заглушки
+                        productImages.add("");
                     }
-
                     imagesAdapter.updateImages(productImages);
                     setupImagesPager();
                 });
@@ -217,7 +212,6 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
                 Log.e("ProductInfo", "Image load error: " + error);
                 runOnUiThread(() -> {
                     productImages.clear();
-                    // Заглушки если ошибка
                     productImages.add("");
                     productImages.add("");
                     productImages.add("");
