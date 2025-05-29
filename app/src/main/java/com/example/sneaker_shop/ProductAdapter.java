@@ -52,13 +52,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         Bitmap cachedBitmap = cacheManager.getBitmapFromMemoryCache(cacheKey);
         if (cachedBitmap != null) {
             holder.imageProduct.setImageBitmap(cachedBitmap);
-            Log.d("ProductAdapter", "Image loaded from memory cache: " + cacheKey);
         } else {
             cachedBitmap = cacheManager.getBitmapFromDiskCache(cacheKey);
             if (cachedBitmap != null) {
                 cacheManager.addBitmapToMemoryCache(cacheKey, cachedBitmap);
                 holder.imageProduct.setImageBitmap(cachedBitmap);
-                Log.d("ProductAdapter", "Image loaded from disk cache: " + cacheKey);
             } else {
                 ImageContext.loadImagesForProduct(context, product.getId(), new ImageContext.ImagesCallback() {
                     @Override
@@ -162,10 +160,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     }
 
     public static class ProductViewHolder extends RecyclerView.ViewHolder {
-        ImageView imageProduct;
-        TextView nameProduct;
-        TextView priceProduct;
-        ImageView favoriteIcon;
+        ImageView imageProduct, favoriteIcon;
+        TextView nameProduct, priceProduct;
 
         public ProductViewHolder(@NonNull View itemView) {
             super(itemView);

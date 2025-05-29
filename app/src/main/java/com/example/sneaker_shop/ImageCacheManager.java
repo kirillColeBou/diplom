@@ -17,7 +17,6 @@ public class ImageCacheManager {
     private static ImageCacheManager instance;
     private final LruCache<String, Bitmap> memoryCache;
     private final File diskCacheDir;
-    private static final int DISK_CACHE_SIZE = 50 * 1024 * 1024;
     private static final String CACHE_DIR = "image_cache";
 
     private ImageCacheManager(Context context) {
@@ -59,7 +58,7 @@ public class ImageCacheManager {
             try (FileInputStream fis = new FileInputStream(file)) {
                 return BitmapFactory.decodeStream(fis);
             } catch (IOException e) {
-                Log.e("ImageCacheManager", "Error reading from disk cache", e);
+                Log.e("ImageCacheManager", "Error from getBitmapFromDiskCache", e);
             }
         }
         return null;
@@ -70,22 +69,8 @@ public class ImageCacheManager {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
         } catch (IOException e) {
-            Log.e("ImageCacheManager", "Error writing to disk cache", e);
+            Log.e("ImageCacheManager", "Error addBitmapToDiskCache", e);
         }
-    }
-
-    public String getBase64FromDiskCache(String key) {
-        File file = new File(diskCacheDir, key.hashCode() + ".txt");
-        if (file.exists()) {
-            try (FileInputStream fis = new FileInputStream(file)) {
-                byte[] bytes = new byte[(int) file.length()];
-                fis.read(bytes);
-                return new String(bytes);
-            } catch (IOException e) {
-                Log.e("ImageCacheManager", "Error reading Base64 from disk cache", e);
-            }
-        }
-        return null;
     }
 
     public void addBase64ToDiskCache(String key, String base64) {
@@ -93,7 +78,7 @@ public class ImageCacheManager {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(base64.getBytes());
         } catch (IOException e) {
-            Log.e("ImageCacheManager", "Error writing Base64 to disk cache", e);
+            Log.e("ImageCacheManager", "Error from addBase64ToDiskCache", e);
         }
     }
 
@@ -108,7 +93,7 @@ public class ImageCacheManager {
                         fis.read(bytes);
                         result.add(new String(bytes));
                     } catch (IOException e) {
-                        Log.e("ImageCacheManager", "Error reading cached images", e);
+                        Log.e("ImageCacheManager", "Error from getAllBase64FromDiskCache", e);
                     }
                 }
             }

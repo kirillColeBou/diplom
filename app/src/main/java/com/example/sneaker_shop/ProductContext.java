@@ -41,7 +41,6 @@ public class ProductContext {
                         .ignoreContentType(true)
                         .get();
                 String response = doc.body().text();
-                Log.d("Supabase", "API Response: " + response);
                 JSONArray jsonArray = new JSONArray(response);
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject obj = jsonArray.getJSONObject(i);
@@ -57,7 +56,6 @@ public class ProductContext {
                 return products;
             } catch (Exception e) {
                 error = "Error: " + e.getMessage();
-                Log.e("Supabase", "Failed to load products: " + error);
                 return null;
             }
         }
