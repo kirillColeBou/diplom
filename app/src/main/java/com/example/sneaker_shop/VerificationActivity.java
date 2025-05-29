@@ -181,8 +181,8 @@ public class VerificationActivity extends AppCompatActivity {
                             email, phone, md5(password)
                     );
                     Document doc = Jsoup.connect(RegisterContext.URL)
-                            .header("Authorization", RegisterContext.TOKEN)
-                            .header("apikey", RegisterContext.SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .header("Content-Type", "application/json")
                             .header("Prefer", "return=minimal")
                             .requestBody(jsonBody)
@@ -190,8 +190,8 @@ public class VerificationActivity extends AppCompatActivity {
                             .post();
                     String getUserUrl = RegisterContext.URL + "?email=eq." + email + "&select=user_uid";
                     Document userDoc = Jsoup.connect(getUserUrl)
-                            .header("Authorization", RegisterContext.TOKEN)
-                            .header("apikey", RegisterContext.SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .get();
                     JSONArray jsonArray = new JSONArray(userDoc.body().text());

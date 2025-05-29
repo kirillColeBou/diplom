@@ -13,9 +13,6 @@ import java.util.List;
 
 public class SizeContext {
     private static final String URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/";
-    private static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
-    private static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
-
     public interface AllSizesCallback {
         void onSuccess(List<Size> allSizes, List<ProductSize> productSizes);
         void onError(String error);
@@ -42,8 +39,8 @@ public class SizeContext {
             try {
                 String allSizesUrl = URL + "sizes?order=value.asc";
                 Document allSizesDoc = Jsoup.connect(allSizesUrl)
-                        .header("apikey", SECRET)
-                        .header("Authorization", TOKEN)
+                        .header("apikey", UserContext.SECRET())
+                        .header("Authorization", UserContext.TOKEN())
                         .ignoreContentType(true)
                         .get();
                 JSONArray allSizesArray = new JSONArray(allSizesDoc.body().text());
@@ -63,8 +60,8 @@ public class SizeContext {
                             "&select=id,product_id,size_id,count,store_id";
                 }
                 Document productSizesDoc = Jsoup.connect(productSizesUrl)
-                        .header("apikey", SECRET)
-                        .header("Authorization", TOKEN)
+                        .header("apikey", UserContext.SECRET())
+                        .header("Authorization", UserContext.TOKEN())
                         .ignoreContentType(true)
                         .get();
                 JSONArray productSizesArray = new JSONArray(productSizesDoc.body().text());

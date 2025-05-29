@@ -13,9 +13,6 @@ import java.util.List;
 
 public class ImageContext {
     private static final String URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/images";
-    private static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
-    private static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
-
     public interface ImagesCallback {
         void onSuccess(List<String> images);
         void onError(String error);
@@ -48,8 +45,8 @@ public class ImageContext {
             try {
                 String url = URL + "?product_id=eq." + productId + "&select=images_byte64";
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 JSONArray jsonArray = new JSONArray(doc.body().text());

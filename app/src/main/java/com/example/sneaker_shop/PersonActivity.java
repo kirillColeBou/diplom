@@ -86,8 +86,8 @@ public class PersonActivity extends AppCompatActivity {
             try {
                 String url = UserContext.URL + "?user_uid=eq." + userId;
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", UserContext.TOKEN)
-                        .header("apikey", UserContext.SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 return new JSONArray(doc.body().text());
@@ -168,8 +168,8 @@ public class PersonActivity extends AppCompatActivity {
                         phoneEditText.getText().toString()
                 );
                 org.jsoup.Connection.Response response = Jsoup.connect(url)
-                        .header("Authorization", UserContext.TOKEN)
-                        .header("apikey", UserContext.SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .header("Content-Type", "application/json")
                         .header("Prefer", "return=minimal")
                         .requestBody(data)
@@ -299,8 +299,8 @@ public class PersonActivity extends AppCompatActivity {
                     String data = String.format("{\"image\":\"%s\"}", cleanedBase64);
                     Log.d("SaveImage", "Sending data: " + data);
                     org.jsoup.Connection.Response response = Jsoup.connect(url)
-                            .header("Authorization", UserContext.TOKEN)
-                            .header("apikey", UserContext.SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .header("Content-Type", "application/json")
                             .header("Prefer", "return=minimal")
                             .requestBody(data)

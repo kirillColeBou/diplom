@@ -7,18 +7,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import com.yandex.mobile.ads.banner.BannerAdSize;
-import com.yandex.mobile.ads.banner.BannerAdView;
-import com.yandex.mobile.ads.common.AdRequest;
-import com.yandex.mobile.ads.common.InitializationListener;
-import com.yandex.mobile.ads.common.MobileAds;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +24,6 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
     private ProductAdapter productAdapter;
     private List<Product> productList = new ArrayList<>();
     private SwipeRefreshLayout swipeRefresh;
-    private BannerAdView adView;
     private long currentUserId;
     private Category currentSelectedCategory;
     private static final int REQUEST_SELECT_STORE = 1;

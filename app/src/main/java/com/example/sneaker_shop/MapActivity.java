@@ -303,8 +303,8 @@ public class MapActivity extends AppCompatActivity {
             try {
                 String url = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/stores?select=*";
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", UserContext.TOKEN)
-                        .header("apikey", UserContext.SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 JSONArray jsonArray = new JSONArray(doc.body().text());

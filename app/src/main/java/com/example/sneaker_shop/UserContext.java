@@ -1,20 +1,27 @@
 package com.example.sneaker_shop;
 
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-
 import org.json.JSONArray;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
 import java.net.URLEncoder;
 
 public class UserContext {
+    private static Context appContext;
+    public static void init(Context context) {
+        appContext = context.getApplicationContext();
+    }
     public static final String URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/users";
-    public static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
-    public static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
+    public static final String TOKEN() {
+        return appContext.getString(R.string.supabase_token);
+    }
+    public static final String SECRET() {
+        return appContext.getString(R.string.supabase_secret);
+    }
 
     public interface Callback {
         void onSuccess(boolean userExists);
@@ -46,8 +53,8 @@ public class UserContext {
                                 ",phone_number.eq." + loginOrEmailOrPhone + ")", "UTF-8") +
                         "&password=eq." + URLEncoder.encode(password, "UTF-8");
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", TOKEN())
+                        .header("apikey", SECRET())
                         .ignoreContentType(true)
                         .get();
                 String response = doc.body().text();
@@ -98,8 +105,8 @@ public class UserContext {
                                 ",phone_number.eq." + loginOrEmailOrPhone + ")") +
                         "&select=user_uid";
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", TOKEN())
+                        .header("apikey", SECRET())
                         .ignoreContentType(true)
                         .get();
                 JSONArray jsonArray = new JSONArray(doc.body().text());
@@ -149,8 +156,8 @@ public class UserContext {
             try {
                 String url = URL + "?user_uid=eq." + userId;
                 Connection.Response response = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", TOKEN())
+                        .header("apikey", SECRET())
                         .header("Prefer", "return=minimal")
                         .method(Connection.Method.DELETE)
                         .ignoreContentType(true)

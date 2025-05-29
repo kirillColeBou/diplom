@@ -54,8 +54,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 String url = RegisterContext.URL + "?email=eq." + URLEncoder.encode(email, "UTF-8");
                 String jsonBody = "{\"password\":\"" + newPasswordHash + "\"}";
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", RegisterContext.TOKEN)
-                        .header("apikey", RegisterContext.SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .header("Content-Type", "application/json")
                         .header("Prefer", "return=minimal")
                         .requestBody(jsonBody)

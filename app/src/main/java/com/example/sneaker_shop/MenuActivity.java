@@ -57,8 +57,8 @@ public class MenuActivity extends AppCompatActivity {
             try {
                 String url = UserContext.URL + "?user_uid=eq." + URLEncoder.encode(userId, "UTF-8");
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", UserContext.TOKEN)
-                        .header("apikey", UserContext.SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 return new JSONArray(doc.body().text());

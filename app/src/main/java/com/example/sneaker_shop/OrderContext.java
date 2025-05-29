@@ -19,9 +19,6 @@ public class OrderContext {
     private static final String PRODUCT_SIZE_URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/product_size";
     private static final String PRODUCTS_URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/products";
     private static final String SIZES_URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/sizes";
-    private static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
-    private static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
-
     public interface OrderCallback {
         void onSuccess(long orderId);
         void onError(String error);
@@ -97,8 +94,8 @@ public class OrderContext {
                 orderJson.put("store_id", storeId);
                 Connection.Response orderResponse = Jsoup.connect(ORDERS_URL)
                         .timeout(10000)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .header("Content-Type", "application/json")
                         .header("Prefer", "return=representation")
                         .requestBody(orderJson.toString())
@@ -116,8 +113,8 @@ public class OrderContext {
                         itemJson.put("product_size_id", item.getProductSizeId());
                         itemJson.put("total_price_product", item.getProduct().getPrice() * item.getCount());
                         Connection.Response itemResponse = Jsoup.connect(ORDER_ITEMS_URL)
-                                .header("Authorization", TOKEN)
-                                .header("apikey", SECRET)
+                                .header("Authorization", UserContext.TOKEN())
+                                .header("apikey", UserContext.SECRET())
                                 .header("Content-Type", "application/json")
                                 .header("Prefer", "return=minimal")
                                 .requestBody(itemJson.toString())
@@ -127,8 +124,8 @@ public class OrderContext {
                         JSONObject updateJson = new JSONObject();
                         updateJson.put("count", item.getAvailableQuantity() - item.getCount());
                         Connection.Response updateResponse = Jsoup.connect(PRODUCT_SIZE_URL + "?id=eq." + item.getProductSizeId())
-                                .header("Authorization", TOKEN)
-                                .header("apikey", SECRET)
+                                .header("Authorization", UserContext.TOKEN())
+                                .header("apikey", UserContext.SECRET())
                                 .header("Content-Type", "application/json")
                                 .header("Prefer", "return=minimal")
                                 .requestBody(updateJson.toString())
@@ -179,8 +176,8 @@ public class OrderContext {
             try {
                 String filter = "user_uid=eq." + userId + "&select=*,order_items(count,product_size_id)";
                 Connection.Response response = Jsoup.connect(ORDERS_URL + "?" + filter)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .method(Connection.Method.GET)
                         .execute();
@@ -237,8 +234,8 @@ public class OrderContext {
                 String orderFilter = "id=eq." + orderId + "&select=status";
                 Log.d("LoadOrderItemsTask", "Fetching order status for orderId: " + orderId);
                 Connection.Response orderResponse = Jsoup.connect(ORDERS_URL + "?" + orderFilter)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .method(Connection.Method.GET)
                         .execute();
@@ -254,8 +251,8 @@ public class OrderContext {
                 String filter = "order_id=eq." + orderId + "&select=count,product_size_id";
                 Log.d("LoadOrderItemsTask", "Fetching order items for orderId: " + orderId);
                 Connection.Response response = Jsoup.connect(ORDER_ITEMS_URL + "?" + filter)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .method(Connection.Method.GET)
                         .execute();
@@ -268,8 +265,8 @@ public class OrderContext {
                     Log.d("LoadOrderItemsTask", "Processing item: count=" + count + ", productSizeId=" + productSizeId);
                     String productSizeUrl = PRODUCT_SIZE_URL + "?id=eq." + productSizeId + "&select=id,product_id,size_id,count";
                     Connection.Response productSizeResponse = Jsoup.connect(productSizeUrl)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .method(Connection.Method.GET)
                             .execute();
@@ -285,8 +282,8 @@ public class OrderContext {
                     int availableQuantity = productSizeObj.getInt("count");
                     String productUrl = PRODUCTS_URL + "?id=eq." + productId + "&select=id,name,price,description,category_id";
                     Connection.Response productResponse = Jsoup.connect(productUrl)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .method(Connection.Method.GET)
                             .execute();
@@ -308,8 +305,8 @@ public class OrderContext {
                     }
                     String sizeUrl = SIZES_URL + "?id=eq." + sizeId + "&select=value";
                     Connection.Response sizeResponse = Jsoup.connect(sizeUrl)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .method(Connection.Method.GET)
                             .execute();
@@ -360,8 +357,8 @@ public class OrderContext {
                 JSONObject updateJson = new JSONObject();
                 updateJson.put("status", newStatus);
                 Connection.Response response = Jsoup.connect(ORDERS_URL + "?id=eq." + orderId)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .header("Content-Type", "application/json")
                         .header("Prefer", "return=minimal")
                         .requestBody(updateJson.toString())
@@ -401,8 +398,8 @@ public class OrderContext {
             try {
                 String filter = "order_id=eq." + orderId + "&select=count,product_size_id";
                 Connection.Response itemsResponse = Jsoup.connect(ORDER_ITEMS_URL + "?" + filter)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .method(Connection.Method.GET)
                         .execute();
@@ -413,8 +410,8 @@ public class OrderContext {
                     int productSizeId = itemObj.getInt("product_size_id");
                     String productSizeUrl = PRODUCT_SIZE_URL + "?id=eq." + productSizeId + "&select=count";
                     Connection.Response productSizeResponse = Jsoup.connect(productSizeUrl)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .method(Connection.Method.GET)
                             .execute();
@@ -424,8 +421,8 @@ public class OrderContext {
                     JSONObject updateJson = new JSONObject();
                     updateJson.put("count", currentCount + count);
                     Connection.Response updateResponse = Jsoup.connect(PRODUCT_SIZE_URL + "?id=eq." + productSizeId)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .header("Content-Type", "application/json")
                             .header("Prefer", "return=minimal")
                             .requestBody(updateJson.toString())
@@ -436,8 +433,8 @@ public class OrderContext {
                 JSONObject updateJson = new JSONObject();
                 updateJson.put("status", "Отменён");
                 Connection.Response response = Jsoup.connect(ORDERS_URL + "?id=eq." + orderId)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .header("Content-Type", "application/json")
                         .header("Prefer", "return=minimal")
                         .requestBody(updateJson.toString())

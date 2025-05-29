@@ -43,8 +43,8 @@ public class RestorePasswordActivity extends AppCompatActivity {
                 String email = emails[0];
                 String url = RegisterContext.URL + "?email=eq." + email + "&select=user_uid";
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", RegisterContext.TOKEN)
-                        .header("apikey", RegisterContext.SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 return doc.body().text().contains("user_uid");

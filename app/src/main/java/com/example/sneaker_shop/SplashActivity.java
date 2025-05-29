@@ -1,5 +1,6 @@
 package com.example.sneaker_shop;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -7,9 +8,12 @@ import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SplashActivity extends AppCompatActivity {
+    Context context;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        context = this;
+        UserContext.init(context);
         if (AuthUtils.isUserLoggedIn(this)) {
             String[] credentials = AuthUtils.getSavedCredentials(this);
             if (credentials != null) {

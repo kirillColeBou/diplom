@@ -35,26 +35,22 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show();
             return false;
         }
-
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             emails.setError("Введите корректный email");
             emails.requestFocus();
             return false;
         }
-
         String cleanedPhone = phone.replaceAll("[^0-9]", "");
-        if (cleanedPhone.length() < 10) {
+        if (cleanedPhone.length() < 11) {
             phone_numbers.setError("Введите корректный номер телефона");
             phone_numbers.requestFocus();
             return false;
         }
-
         if (password.length() < 6) {
             passwords.setError("Пароль должен содержать минимум 6 символов");
             passwords.requestFocus();
             return false;
         }
-
         return true;
     }
 

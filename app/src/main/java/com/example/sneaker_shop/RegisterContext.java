@@ -11,8 +11,6 @@ import java.net.URLEncoder;
 
 public class RegisterContext {
     public static final String URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/users";
-    public static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
-    public static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
     private static final String CHECK_USER_URL = URL + "?select=email,phone_number&or=(email.eq.%s,phone_number.eq.%s)";
 
     public interface Callback {
@@ -43,8 +41,8 @@ public class RegisterContext {
                         URLEncoder.encode(email, "UTF-8"),
                         URLEncoder.encode(phone, "UTF-8"));
                 Document doc = Jsoup.connect(checkUrl)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 JSONArray users = new JSONArray(doc.body().text());

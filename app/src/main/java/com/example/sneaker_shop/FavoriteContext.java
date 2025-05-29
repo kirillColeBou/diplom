@@ -14,9 +14,6 @@ import org.jsoup.Connection;
 
 public class FavoriteContext {
     private static final String URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/favorites";
-    private static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
-    private static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
-
     public interface FavoriteCallback {
         void onSuccess(boolean isFavorite);
         void onError(String error);
@@ -49,8 +46,8 @@ public class FavoriteContext {
                         URLEncoder.encode("(user_uid.eq." + userUid +
                                 ",product_id.eq." + productId + ")", "UTF-8");
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 return doc.body().text().length() > 2;
@@ -95,8 +92,8 @@ public class FavoriteContext {
                 if (isCurrentlyFavorite) {
                     String url = URL + "?user_uid=eq." + userUid + "&product_id=eq." + URLEncoder.encode(productId, "UTF-8");
                     Connection.Response response = Jsoup.connect(url)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .method(Connection.Method.DELETE)
                             .execute();
@@ -106,8 +103,8 @@ public class FavoriteContext {
                     jsonObject.put("user_uid", userUid);
                     jsonObject.put("product_id", productId);
                     Connection.Response response = Jsoup.connect(URL)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .header("Content-Type", "application/json")
                             .header("Prefer", "return=minimal")
                             .requestBody(jsonObject.toString())
@@ -157,8 +154,8 @@ public class FavoriteContext {
             try {
                 String url = URL + "?select=product:products(*)&user_uid=eq." + userUid;
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
 

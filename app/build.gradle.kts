@@ -31,13 +31,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    packagingOptions {
+    packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-            excludes += "/META-INF/NOTICE.md"
-            excludes += "/META-INF/LICENSE.md"
-            excludes += "/META-INF/DEPENDENCIES"
-            excludes += "/META-INF/INDEX.LIST"
+            excludes += setOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/NOTICE.md",
+                "/META-INF/LICENSE.md",
+                "/META-INF/DEPENDENCIES",
+                "/META-INF/INDEX.LIST"
+            )
         }
     }
 }
@@ -47,7 +49,6 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-    implementation("com.yandex.android:mobileads:7.12.1")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
@@ -62,6 +63,8 @@ dependencies {
     implementation("org.apmem.tools:layouts:1.10@aar")
     implementation("com.yandex.android:maps.mobile:4.6.1-lite")
     implementation("androidx.work:work-runtime:2.7.1")
+    implementation("androidx.security:security-crypto:1.0.0")
+    implementation("at.favre.lib:bcrypt:0.9.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

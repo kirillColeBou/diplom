@@ -13,9 +13,6 @@ import java.util.List;
 public class CartContext {
     private static final String BASKET_URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/baskets";
     private static final String BASKET_ITEMS_URL = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/basket_items";
-    private static final String TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzY0NSwiZXhwIjoyMDYwODAzNjQ1fQ.LNqLc1o8I8eZUxYuFXknXZZhzN5kRh0eggmg5tItiM0";
-    private static final String SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1neHlteGllaGZzcHR1dWJ1cWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjc2NDUsImV4cCI6MjA2MDgwMzY0NX0.QXcy5Dpd4_b58-xfpvPAIgm9U8Pj6w62RW6p7NDUKyQ";
-
     public interface BasketCallback {
         void onSuccess(String basketId);
         void onError(String error);
@@ -75,8 +72,8 @@ public class CartContext {
             try {
                 String url = BASKET_URL + "?user_uid=eq." + userUid + "&select=id";
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 JSONArray jsonArray = new JSONArray(doc.body().text());
@@ -86,8 +83,8 @@ public class CartContext {
                     JSONObject newBasket = new JSONObject();
                     newBasket.put("user_uid", userUid);
                     Document created = Jsoup.connect(BASKET_URL)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .header("Content-Type", "application/json")
                             .header("Prefer", "return=representation")
                             .requestBody(newBasket.toString())
@@ -139,8 +136,8 @@ public class CartContext {
                         "&store_id=eq." + storeId +
                         "&select=id,count";
                 Document checkDoc = Jsoup.connect(checkUrl)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 JSONArray items = new JSONArray(checkDoc.body().text());
@@ -153,8 +150,8 @@ public class CartContext {
                 }
                 String stockUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/product_size?id=eq." + productSizeId + "&select=count";
                 Document stockDoc = Jsoup.connect(stockUrl)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 JSONArray stockArray = new JSONArray(stockDoc.body().text());
@@ -173,8 +170,8 @@ public class CartContext {
                     JSONObject update = new JSONObject();
                     update.put("count", currentCount + quantity);
                     Jsoup.connect(BASKET_ITEMS_URL + "?id=eq." + itemId)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .header("Content-Type", "application/json")
                             .requestBody(update.toString())
                             .ignoreContentType(true)
@@ -187,8 +184,8 @@ public class CartContext {
                     newItem.put("count", quantity);
                     newItem.put("store_id", storeId);
                     Jsoup.connect(BASKET_ITEMS_URL)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .header("Content-Type", "application/json")
                             .header("Prefer", "return=minimal")
                             .requestBody(newItem.toString())
@@ -229,8 +226,8 @@ public class CartContext {
             try {
                 String basketItemsUrl = BASKET_ITEMS_URL + "?" + filter + "&select=id,count,product_size_id";
                 Document basketDoc = Jsoup.connect(basketItemsUrl)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
 
@@ -247,8 +244,8 @@ public class CartContext {
                     String itemId = itemObj.getString("id");
                     String productSizeUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/product_size?id=eq." + productSizeId + "&select=id,product_id,size_id,count,store_id";
                     Document productSizeDoc = Jsoup.connect(productSizeUrl)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .get();
                     JSONArray productSizeArray = new JSONArray(productSizeDoc.body().text());
@@ -258,8 +255,8 @@ public class CartContext {
                     int availableQuantity = productSizeObj.optInt("count", 0);
                     String productUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/products?id=eq." + productId + "&select=id,name,price,description,category_id";
                     Document productDoc = Jsoup.connect(productUrl)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .get();
                     JSONArray productArray = new JSONArray(productDoc.body().text());
@@ -276,8 +273,8 @@ public class CartContext {
                     }
                     String sizeUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/sizes?id=eq." + sizeId + "&select=value";
                     Document sizeDoc = Jsoup.connect(sizeUrl)
-                            .header("Authorization", TOKEN)
-                            .header("apikey", SECRET)
+                            .header("Authorization", UserContext.TOKEN())
+                            .header("apikey", UserContext.SECRET())
                             .ignoreContentType(true)
                             .get();
                     JSONArray sizeArray = new JSONArray(sizeDoc.body().text());
@@ -327,8 +324,8 @@ public class CartContext {
                 JSONObject update = new JSONObject();
                 update.put("count", newCount);
                 Jsoup.connect(BASKET_ITEMS_URL + "?id=eq." + itemId)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .header("Content-Type", "application/json")
                         .requestBody(update.toString())
                         .ignoreContentType(true)
@@ -371,8 +368,8 @@ public class CartContext {
         protected Boolean doInBackground(Void... voids) {
             try {
                 Jsoup.connect(BASKET_ITEMS_URL + "?id=eq." + itemId)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .method(org.jsoup.Connection.Method.DELETE)
                         .execute();
@@ -410,8 +407,8 @@ public class CartContext {
             try {
                 String url = BASKET_ITEMS_URL + "?" + filter;
                 Document doc = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 JSONArray itemsArray = new JSONArray(doc.body().text());
@@ -462,8 +459,8 @@ public class CartContext {
             try {
                 String url = BASKET_URL + "?basket_id=eq." + basketId;
                 Connection.Response response = Jsoup.connect(url)
-                        .header("Authorization", TOKEN)
-                        .header("apikey", SECRET)
+                        .header("Authorization", UserContext.TOKEN())
+                        .header("apikey", UserContext.SECRET())
                         .header("Prefer", "return=minimal")
                         .method(Connection.Method.DELETE)
                         .ignoreContentType(true)
