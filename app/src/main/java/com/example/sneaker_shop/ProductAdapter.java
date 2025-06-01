@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,6 +51,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         String cacheKey = "product_" + product.getId() + "_0";
         ImageCacheManager cacheManager = ImageCacheManager.getInstance(context);
         Bitmap cachedBitmap = cacheManager.getBitmapFromMemoryCache(cacheKey);
+
+        // Установка размеров ImageView в зависимости от размера экрана
+        setImageSize(holder.imageProduct);
+
         if (cachedBitmap != null) {
             holder.imageProduct.setImageBitmap(cachedBitmap);
         } else {
@@ -87,6 +92,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 });
             }
         }
+
         FavoriteContext.checkFavorite(currentUserId, String.valueOf(product.getId()), new FavoriteContext.FavoriteCallback() {
             @Override
             public void onSuccess(boolean isFavorite) {
@@ -103,6 +109,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 Log.e("ProductAdapter", "Error checking favorite status: " + error);
             }
         });
+
         holder.favoriteIcon.setOnClickListener(v -> {
             int currentPosition = holder.getAdapterPosition();
             if (currentPosition == RecyclerView.NO_POSITION) return;
@@ -140,6 +147,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                         }
                     });
         });
+
         holder.itemView.setOnClickListener(v -> {
             int currentPosition = holder.getAdapterPosition();
             if (currentPosition != RecyclerView.NO_POSITION) {
@@ -170,5 +178,27 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             priceProduct = itemView.findViewById(R.id.price_product);
             favoriteIcon = itemView.findViewById(R.id.favorite_icon);
         }
+    }
+
+    private void setImageSize(ImageView imageView) {
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        int smallestWidthDp = (int) (Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) / displayMetrics.density);
+        int width, height;
+        if (smallestWidthDp < 600) {
+            width = 130;
+            height = 70;
+        } else if (smallestWidthDp >= 600 && smallestWidthDp <= 720) {
+            width = 160;
+            height = 80;
+        } else {
+            width = 320;
+            height = 160;
+        }
+        int widthPx = (int) (width * displayMetrics.density);
+        int heightPx = (int) (height * displayMetrics.density);
+        ViewGroup.LayoutParams params = imageView.getLayoutParams();
+        params.width = widthPx;
+        params.height = heightPx;
+        imageView.setLayoutParams(params);
     }
 }

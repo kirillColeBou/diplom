@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,6 +53,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
         Product product = favoriteProducts.get(position);
         holder.nameProduct.setText(product.getName());
         holder.priceProduct.setText(String.format("%d ₽", (int) product.getPrice()));
+        setImageSize(holder.imageProduct);
         loadProductImage(product.getId(), holder.imageProduct);
         holder.favoriteIcon.setVisibility(View.GONE);
         holder.moreFavorite.setVisibility(View.VISIBLE);
@@ -132,5 +134,27 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.Favori
             favoriteIcon = itemView.findViewById(R.id.favorite_icon);
             moreFavorite = itemView.findViewById(R.id.more_favorite);
         }
+    }
+
+    private void setImageSize(ImageView imageView) {
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        int smallestWidthDp = (int) (Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) / displayMetrics.density);
+        int width, height;
+        if (smallestWidthDp < 600) {
+            width = 130;
+            height = 70;
+        } else if (smallestWidthDp >= 600 && smallestWidthDp <= 720) {
+            width = 160;
+            height = 80;
+        } else {
+            width = 320;
+            height = 160;
+        }
+        int widthPx = (int) (width * displayMetrics.density);
+        int heightPx = (int) (height * displayMetrics.density);
+        ViewGroup.LayoutParams params = imageView.getLayoutParams();
+        params.width = widthPx;
+        params.height = heightPx;
+        imageView.setLayoutParams(params);
     }
 }
