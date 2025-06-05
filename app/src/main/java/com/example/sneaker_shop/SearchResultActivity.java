@@ -70,36 +70,7 @@ public class SearchResultActivity extends AppCompatActivity
 
     @Override
     public void onFavoriteClick(int position, boolean newFavoriteState) {
-        if (position < 0 || position >= productList.size()) return;
-        Product product = productList.get(position);
-        FavoriteContext.toggleFavorite(currentUserId, String.valueOf(product.getId()), newFavoriteState,
-                new FavoriteContext.FavoriteCallback() {
-                    @Override
-                    public void onSuccess(boolean serverConfirmedState) {
-                        runOnUiThread(() -> {
-                            productAdapter.notifyItemChanged(position);
-                            if (serverConfirmedState == newFavoriteState) {
-                                Toast.makeText(SearchResultActivity.this,
-                                        newFavoriteState ? "Добавлено в избранное" : "Удалено из избранного",
-                                        Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(SearchResultActivity.this,
-                                        "Состояние избранного не изменилось",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
 
-                    @Override
-                    public void onError(String error) {
-                        runOnUiThread(() -> {
-                            productAdapter.notifyItemChanged(position);
-                            Toast.makeText(SearchResultActivity.this,
-                                    "Ошибка сети: " + error,
-                                    Toast.LENGTH_SHORT).show();
-                        });
-                    }
-                });
     }
 
     private void loadSearchResults() {
@@ -157,6 +128,12 @@ public class SearchResultActivity extends AppCompatActivity
 
     public void onFavorite(View view) {
         startActivity(new Intent(this, FavoriteActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
+    }
+
+    public void onCart(View view) {
+        startActivity(new Intent(this, CartActivity.class));
         overridePendingTransition(0, 0);
         finish();
     }

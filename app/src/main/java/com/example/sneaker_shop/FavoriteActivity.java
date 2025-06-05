@@ -176,11 +176,11 @@ public class FavoriteActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(product -> {
             Intent intent = new Intent(FavoriteActivity.this, ProductInfoActivity.class);
             intent.putExtra("product", product);
+            intent.putExtra("from_favorite", true);
             startActivity(intent);
         });
         recyclerView.setAdapter(adapter);
     }
-
 
     private void loadFavoriteProducts() {
         swipeRefreshLayout.setRefreshing(true);

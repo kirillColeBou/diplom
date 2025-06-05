@@ -158,7 +158,6 @@ public class FavoriteContext {
                         .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
-
                 String response = doc.body().text();
                 JSONArray jsonArray = new JSONArray(response);
                 List<Product> products = new ArrayList<>();
@@ -169,7 +168,10 @@ public class FavoriteContext {
                             obj.getString("name"),
                             obj.getDouble("price"),
                             obj.getString("description"),
-                            obj.getInt("category_id")
+                            obj.getInt("category_id"),
+                            obj.getInt("brand_id"),
+                            obj.getInt("shoe_color_id"),
+                            obj.getInt("sole_color_id")
                     );
                     products.add(product);
                 }

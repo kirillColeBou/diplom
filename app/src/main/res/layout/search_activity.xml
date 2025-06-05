@@ -31,8 +31,8 @@
                 android:background="@drawable/background_edittext">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     android:src="@drawable/back_search"
                     android:layout_gravity="center"
                     android:onClick="onBack"/>
@@ -51,7 +51,8 @@
                     android:textColor="#2B2B2B"
                     android:layout_weight="1"
                     android:imeOptions="actionSearch"
-                    android:inputType="text"/>
+                    android:inputType="text"
+                    android:layout_gravity="center"/>
 
                 <LinearLayout
                     android:id="@+id/suggestionsContainer"
@@ -80,8 +81,8 @@
                 </LinearLayout>
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     android:src="@drawable/cross_search"
                     android:layout_gravity="center"
                     android:onClick="onDeleteSearchText"/>
@@ -113,8 +114,8 @@
 
                     <ImageView
                         android:id="@+id/editHistoryButton"
-                        android:layout_width="18dp"
-                        android:layout_height="14dp"
+                        android:layout_width="24dp"
+                        android:layout_height="20dp"
                         android:src="@drawable/redac_search"
                         android:layout_gravity="center"
                         android:onClick="onRedact"/>

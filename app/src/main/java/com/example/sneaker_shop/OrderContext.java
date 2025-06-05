@@ -280,7 +280,7 @@ public class OrderContext {
                     int productId = productSizeObj.getInt("product_id");
                     int sizeId = productSizeObj.getInt("size_id");
                     int availableQuantity = productSizeObj.getInt("count");
-                    String productUrl = PRODUCTS_URL + "?id=eq." + productId + "&select=id,name,price,description,category_id";
+                    String productUrl = PRODUCTS_URL + "?id=eq." + productId + "&select=id,name,price,description,category_id,brand_id,shoe_color_id,sole_color_id";
                     Connection.Response productResponse = Jsoup.connect(productUrl)
                             .header("Authorization", UserContext.TOKEN())
                             .header("apikey", UserContext.SECRET())
@@ -297,7 +297,10 @@ public class OrderContext {
                                 productObj.getString("name"),
                                 productObj.getDouble("price"),
                                 productObj.getString("description"),
-                                productObj.getInt("category_id")
+                                productObj.getInt("category_id"),
+                                productObj.getInt("brand_id"),
+                                productObj.getInt("shoe_color_id"),
+                                productObj.getInt("sole_color_id")
                         );
                     } else {
                         Log.w("LoadOrderItemsTask", "No product found for productId: " + productId);

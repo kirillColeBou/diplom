@@ -12,10 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.util.List;
 import java.util.Locale;
 
@@ -51,10 +49,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         String cacheKey = "product_" + product.getId() + "_0";
         ImageCacheManager cacheManager = ImageCacheManager.getInstance(context);
         Bitmap cachedBitmap = cacheManager.getBitmapFromMemoryCache(cacheKey);
-
-        // Установка размеров ImageView в зависимости от размера экрана
         setImageSize(holder.imageProduct);
-
         if (cachedBitmap != null) {
             holder.imageProduct.setImageBitmap(cachedBitmap);
         } else {
@@ -92,7 +87,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 });
             }
         }
-
         FavoriteContext.checkFavorite(currentUserId, String.valueOf(product.getId()), new FavoriteContext.FavoriteCallback() {
             @Override
             public void onSuccess(boolean isFavorite) {
@@ -109,7 +103,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 Log.e("ProductAdapter", "Error checking favorite status: " + error);
             }
         });
-
         holder.favoriteIcon.setOnClickListener(v -> {
             int currentPosition = holder.getAdapterPosition();
             if (currentPosition == RecyclerView.NO_POSITION) return;
@@ -147,7 +140,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                         }
                     });
         });
-
         holder.itemView.setOnClickListener(v -> {
             int currentPosition = holder.getAdapterPosition();
             if (currentPosition != RecyclerView.NO_POSITION) {
@@ -155,6 +147,20 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 Log.d("ProductAdapter", "Item clicked: " + clickedProduct.getName() + " at position " + currentPosition);
                 Intent intent = new Intent(context, ProductInfoActivity.class);
                 intent.putExtra("product", clickedProduct);
+                if (context instanceof FilterResultActivity) {
+                    intent.putExtra("from_filter_result", true);
+                    Intent filterIntent = ((FilterResultActivity) context).getIntent();
+                    intent.putExtra("minPrice", filterIntent.getDoubleExtra("minPrice", 0.0));
+                    intent.putExtra("maxPrice", filterIntent.getDoubleExtra("maxPrice", 100000.0));
+                    intent.putExtra("brandIds", filterIntent.getIntArrayExtra("brandIds"));
+                    intent.putExtra("shoeColorIds", filterIntent.getIntArrayExtra("shoeColorIds"));
+                    intent.putExtra("soleColorIds", filterIntent.getIntArrayExtra("soleColorIds"));
+                    intent.putExtra("categoryIds", filterIntent.getIntArrayExtra("categoryIds"));
+                    intent.putExtra("sizeIds", filterIntent.getIntArrayExtra("sizeIds"));
+                    intent.putExtra("storeId", filterIntent.getIntExtra("storeId", -1));
+                } else if (context instanceof FavoriteActivity) {
+                    intent.putExtra("from_favorite", true);
+                }
                 context.startActivity(intent);
             } else {
                 Log.w("ProductAdapter", "Invalid position on item click: " + currentPosition);

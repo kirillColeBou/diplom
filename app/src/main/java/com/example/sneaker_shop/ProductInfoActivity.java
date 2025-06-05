@@ -723,7 +723,23 @@ public class ProductInfoActivity extends AppCompatActivity implements SizeAdapte
     }
 
     public void onBack(View view) {
-        startActivity(new Intent(this, MainActivity.class));
+        Intent intent = new Intent();
+        if (getIntent().getBooleanExtra("from_filter_result", false)) {
+            intent.setClass(this, FilterResultActivity.class);
+            intent.putExtra("minPrice", getIntent().getDoubleExtra("minPrice", 0.0));
+            intent.putExtra("maxPrice", getIntent().getDoubleExtra("maxPrice", 100000.0));
+            intent.putExtra("brandIds", getIntent().getIntArrayExtra("brandIds"));
+            intent.putExtra("shoeColorIds", getIntent().getIntArrayExtra("shoeColorIds"));
+            intent.putExtra("soleColorIds", getIntent().getIntArrayExtra("soleColorIds"));
+            intent.putExtra("categoryIds", getIntent().getIntArrayExtra("categoryIds"));
+            intent.putExtra("sizeIds", getIntent().getIntArrayExtra("sizeIds"));
+            intent.putExtra("storeId", getIntent().getIntExtra("storeId", -1));
+        } else if (getIntent().getBooleanExtra("from_favorite", false)) {
+            intent.setClass(this, FavoriteActivity.class);
+        } else {
+            intent.setClass(this, MainActivity.class);
+        }
+        startActivity(intent);
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
         finish();
     }

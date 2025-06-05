@@ -51,7 +51,6 @@ public class SizeContext {
                 }
                 int selectedStoreId = PreferencesHelper.getSelectedStoreId(context);
                 String productSizesUrl;
-
                 if (selectedStoreId != -1) {
                     productSizesUrl = URL + "product_size?product_id=eq." + productId +
                             "&store_id=eq." + selectedStoreId + "&select=id,product_id,size_id,count,store_id";

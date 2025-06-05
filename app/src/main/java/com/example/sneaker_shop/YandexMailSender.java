@@ -2,9 +2,7 @@ package com.example.sneaker_shop;
 
 import android.os.AsyncTask;
 import android.util.Log;
-
 import java.util.Properties;
-
 import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;

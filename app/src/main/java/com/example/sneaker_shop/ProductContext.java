@@ -32,12 +32,13 @@ public class ProductContext {
         protected List<Product> doInBackground(Void... voids) {
             List<Product> products = new ArrayList<>();
             try {
-                Document doc = Jsoup.connect(URL)
+                Document doc = Jsoup.connect(URL + "?select=id,name,brand_id,description,price,category_id,shoe_color_id,sole_color_id")
                         .header("Authorization", UserContext.TOKEN())
                         .header("apikey", UserContext.SECRET())
                         .ignoreContentType(true)
                         .get();
                 String response = doc.body().text();
+                Log.d("SupabaseResponse", "Response: " + response);
                 JSONArray jsonArray = new JSONArray(response);
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject obj = jsonArray.getJSONObject(i);
@@ -46,13 +47,17 @@ public class ProductContext {
                             obj.getString("name"),
                             obj.getDouble("price"),
                             obj.getString("description"),
-                            obj.getInt("category_id")
+                            obj.getInt("category_id"),
+                            obj.getInt("brand_id"),
+                            obj.getInt("shoe_color_id"),
+                            obj.getInt("sole_color_id")
                     );
                     products.add(product);
                 }
                 return products;
             } catch (Exception e) {
-                error = "Error: " + e.getMessage();
+                error = "Error loading products: " + e.getMessage();
+                Log.e("ProductContext", error, e);
                 return null;
             }
         }
@@ -85,7 +90,7 @@ public class ProductContext {
         protected List<Product> doInBackground(Void... voids) {
             List<Product> products = new ArrayList<>();
             try {
-                String url = URL + "?category_id=eq." + categoryId;
+                String url = URL + "?category_id=eq." + categoryId + "&select=id,name,brand_id,description,price,category_id,shoe_color_id,sole_color_id";
                 Document doc = Jsoup.connect(url)
                         .header("Authorization", UserContext.TOKEN())
                         .header("apikey", UserContext.SECRET())
@@ -100,14 +105,17 @@ public class ProductContext {
                             obj.getString("name"),
                             obj.getDouble("price"),
                             obj.getString("description"),
-                            obj.getInt("category_id")
+                            obj.getInt("category_id"),
+                            obj.getInt("brand_id"),
+                            obj.getInt("shoe_color_id"),
+                            obj.getInt("sole_color_id")
                     );
                     products.add(product);
                 }
                 return products;
             } catch (Exception e) {
-                error = "Error: " + e.getMessage();
-                Log.e("Supabase", "Failed to load products by category: " + error);
+                error = "Error loading products by category: " + e.getMessage();
+                Log.e("Supabase", error, e);
                 return null;
             }
         }
@@ -160,12 +168,16 @@ public class ProductContext {
                             obj.getString("name"),
                             obj.getDouble("price"),
                             obj.getString("description"),
-                            obj.getInt("category_id")
+                            obj.getInt("category_id"),
+                            obj.getInt("brand_id"),
+                            obj.getInt("shoe_color_id"),
+                            obj.getInt("sole_color_id")
                     ));
                 }
                 return products;
             } catch (Exception e) {
-                Log.e("API_ERROR", "Error fetching recommendations", e);
+                error = "Error fetching recommendations: " + e.getMessage();
+                Log.e("API_ERROR", error, e);
                 return null;
             }
         }

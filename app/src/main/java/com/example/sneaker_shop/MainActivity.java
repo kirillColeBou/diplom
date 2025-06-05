@@ -240,6 +240,12 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.On
         finish();
     }
 
+    public void onFilterProduct(View view) {
+        startActivity(new Intent(this, FilterActivity.class));
+        overridePendingTransition(0, 0);
+        finish();
+    }
+
     public void onCart(View view) {
         startActivity(new Intent(this, CartActivity.class));
         overridePendingTransition(0, 0);

@@ -253,7 +253,7 @@ public class CartContext {
                     int productId = productSizeObj.getInt("product_id");
                     int sizeId = productSizeObj.getInt("size_id");
                     int availableQuantity = productSizeObj.optInt("count", 0);
-                    String productUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/products?id=eq." + productId + "&select=id,name,price,description,category_id";
+                    String productUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/products?id=eq." + productId + "&select=id,name,price,description,category_id,brand_id,shoe_color_id,sole_color_id";
                     Document productDoc = Jsoup.connect(productUrl)
                             .header("Authorization", UserContext.TOKEN())
                             .header("apikey", UserContext.SECRET())
@@ -268,7 +268,10 @@ public class CartContext {
                                 productObj.getString("name"),
                                 productObj.getDouble("price"),
                                 productObj.getString("description"),
-                                productObj.getInt("category_id")
+                                productObj.getInt("category_id"),
+                                productObj.getInt("brand_id"),
+                                productObj.getInt("shoe_color_id"),
+                                productObj.getInt("sole_color_id")
                         );
                     }
                     String sizeUrl = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/sizes?id=eq." + sizeId + "&select=value";

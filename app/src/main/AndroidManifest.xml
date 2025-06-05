@@ -51,5 +51,7 @@
         <activity android:name=".MapActivity"/>
         <activity android:name=".OrderActivity"/>
         <activity android:name=".OrderInfoActivity"/>
+        <activity android:name=".FilterActivity"/>
+        <activity android:name=".FilterResultActivity"/>
     </application>
 </manifest>
