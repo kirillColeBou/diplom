@@ -1,10 +1,13 @@
 package com.example.sneaker_shop;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -22,6 +25,21 @@ public class RestorePasswordActivity extends AppCompatActivity {
         setContentView(R.layout.restore_password_activity);
         emailEditText = findViewById(R.id.email_edittext);
         findViewById(R.id.submit_button).setOnClickListener(v -> checkUserExists());
+        View rootLayout = findViewById(R.id.main5);
+        rootLayout.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                hideKeyboard();
+            }
+            return false;
+        });
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        View view = getCurrentFocus();
+        if (view != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     private void checkUserExists() {

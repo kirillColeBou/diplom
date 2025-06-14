@@ -147,7 +147,7 @@ public class ProductContext {
         @Override
         protected List<Product> doInBackground(Void... voids) {
             try {
-                String url = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/rpc/get_recommended_products";
+                String url = "https://mgxymxiehfsptuubuqfv.supabase.co/rest/v1/rpc/get_recommend_products";
                 JSONObject params = new JSONObject();
                 params.put("input_user_uid", userUid);
                 Document doc = Jsoup.connect(url)

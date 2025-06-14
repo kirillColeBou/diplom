@@ -1,9 +1,12 @@
 package com.example.sneaker_shop;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -31,6 +34,13 @@ public class AuthorizationActivity extends AppCompatActivity {
         passwords = findViewById(R.id.password);
         eyeIcon = findViewById(R.id.eyeIcon);
         eyeIcon.setOnClickListener(v -> togglePasswordVisibility());
+        View rootLayout = findViewById(R.id.main);
+        rootLayout.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                hideKeyboard();
+            }
+            return false;
+        });
     }
 
     private void togglePasswordVisibility() {
@@ -107,13 +117,21 @@ public class AuthorizationActivity extends AppCompatActivity {
         }
     }
 
-    public void onRestorePassword(View view){
+    public void onRestorePassword(View view) {
         startActivity(new Intent(AuthorizationActivity.this, RestorePasswordActivity.class));
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
     }
 
-    public void onRegister(View view){
+    public void onRegister(View view) {
         startActivity(new Intent(AuthorizationActivity.this, RegisterActivity.class));
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        View view = getCurrentFocus();
+        if (view != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 }
